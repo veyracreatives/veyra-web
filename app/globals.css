@@ -3,13 +3,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Font variables — next/font injects these automatically */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  /* Custom font families for Tailwind v4 utility classes */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +28,133 @@
   }
 }
 
+/* ─── Smooth scroll ─── */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Use the next/font CSS variable for the body font */
+  font-family: var(--font-body), system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Custom scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0D12;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 124, 246, 0.35);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(214, 255, 63, 0.55);
+}
+
+/* ─── Keyframes ─── */
+
+/* Soft pulse glow for accent elements */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* Horizontal line grow for parallax section divider */
+@keyframes line-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Floating gentle drift for background decorations */
+@keyframes float-drift {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25%      { transform: translateY(-12px) translateX(6px); }
+  50%      { transform: translateY(-6px) translateX(-8px); }
+  75%      { transform: translateY(-18px) translateX(4px); }
+}
+
+/* Gradient border rotation for founder/co-founder cards */
+@keyframes gradient-rotate {
+  0%   { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+/* Subtle grain overlay */
+@keyframes grain-shift {
+  0%, 100% { transform: translate(0, 0); }
+  10%      { transform: translate(-2%, -2%); }
+  30%      { transform: translate(1%, -1%); }
+  50%      { transform: translate(-1%, 2%); }
+  70%      { transform: translate(2%, 1%); }
+  90%      { transform: translate(-1%, -1%); }
+}
+
+/* Scroll progress bar at top of page */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #D6FF3F, #8B7CF6, #D6FF3F);
+  z-index: 9999;
+  transform-origin: left;
+  transition: transform 0.05s linear;
+  pointer-events: none;
+}
+
+/* ─── Animated gradient border card ─── */
+.gradient-border-card {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+.gradient-border-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--gradient-angle, 0deg),
+    #D6FF3F,
+    #8B7CF6,
+    #D6FF3F,
+    #8B7CF6,
+    #D6FF3F
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: gradient-rotate 6s linear infinite;
+  opacity: 0.5;
+  transition: opacity 0.4s ease;
+}
+.gradient-border-card:hover::before {
+  opacity: 1;
+}
+
+/* ─── Parallax section styles ─── */
+.parallax-section {
+  position: relative;
+  overflow: hidden;
+}
+.parallax-section .parallax-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
 }
