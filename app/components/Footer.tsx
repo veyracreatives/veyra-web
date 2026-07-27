@@ -6,9 +6,14 @@ export default function Footer() {
           © {new Date().getFullYear()} Veyra Creatives &amp; Digital Lab
         </p>
         <div className="flex gap-6" style={{ fontFamily: "var(--font-mono)" }}>
-          <a href="#" className="transition hover:text-white">Instagram</a>
-          <a href="#" className="transition hover:text-white">LinkedIn</a>
-          <a href="#" className="transition hover:text-white">X</a>
+          <a 
+            href="https://www.instagram.com/veyracdl_25?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="transition hover:text-white"
+          >
+            Instagram
+          </a>
         </div>
       </div>
     </footer>
