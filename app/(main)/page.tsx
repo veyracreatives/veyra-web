@@ -6,11 +6,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import ScrollParallax from "@/app/components/ScrollParallax";
 import RevealBlock from "@/app/components/Reveal";
-import ScrollAgain from "@/app/components/ScrollAgain"; 
+import ScrollAgain from "@/app/components/ScrollAgain";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ─── palette + types (for the founder blocks) ────────── */
+/* ─── palette + types ────────────────────────────────── */
 const ACCENTS = { lime: "#D6FF3F", purple: "#8B7CF6" } as const;
 type Accent = keyof typeof ACCENTS;
 type Glyph = { char: string; color: string; size: number; pos: React.CSSProperties; z: number; speed: number; delay: string };
@@ -43,7 +43,7 @@ const cofounderSkills = [
   { label: "Visual Craft", value: 95 },
 ];
 
-/* ─── scroll reveal hook (home's local Reveal) ────────── */
+/* ─── scroll reveal hook ─────────────────────────────── */
 function useReveal() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -98,7 +98,693 @@ function ScrollProgress() {
   return <div className="scroll-progress" style={{ transform: `scaleX(${progress})` }} />;
 }
 
-/* ─── Scroll Sequence (home intro, frame-by-frame) ────── */
+/* ═══════════════════════════════════════════════════════
+   AMBIENT TYPE FIELD — kinetic typography background
+   2-layer parallax · blueprint grid · scan-line reveal
+   glyph accents · corner telemetry · velocity connectors
+   ═══════════════════════════════════════════════════════ */
+
+type FieldLayer = "back" | "front";
+
+interface GlyphAccent {
+  char: string;
+  size: number;
+  pos: React.CSSProperties;
+  orbitRadius: number;
+  orbitSpeed: number; // radians / ms
+  phase: number;
+}
+
+interface WordConfig {
+  text: string;
+  color: string;
+  fontSize: number; // vw
+  strokeWidth: number; // px
+  baseOpacity: number;
+  layer: FieldLayer;
+  axis: "horizontal" | "diagonal" | "vertical";
+  speed: number;
+  angle: number;
+  startX: number; // 0–1 viewport fraction
+  startY: number;
+  pulseFreq: number;
+  pulsePhase: number;
+  glitchInterval: number;
+  glitchTimer: number;
+  glitchActive: boolean;
+  glitchStart: number;
+  glitchDuration: number;
+  glyphs: GlyphAccent[];
+}
+
+interface WordState {
+  x: number;
+  y: number;
+  scale: number;
+  opacity: number;
+  cursorSkewX: number;
+  cursorSkewY: number;
+  cursorOpacityBoost: number;
+  glitchOffsetX: number;
+  glitchOffsetY: number;
+  glitchSkew: number;
+  glitchSplit: number;
+  scanSolid: boolean;
+}
+
+const LIME = "#D6FF3F";
+const PURPLE = "#8B7CF6";
+const OFFWHITE = "#F5F3EE";
+const SCAN_PERIOD = 7000; // ms per sweep
+const LINE_POOL = 8;
+
+const FIELD_WORDS: WordConfig[] = [
+  /* ── FRONT LAYER — sharp, faster ── */
+  {
+    text: "STRATEGY", color: LIME, fontSize: 21, strokeWidth: 1.5, baseOpacity: 0.12,
+    layer: "front", axis: "horizontal", speed: 0.42, angle: 0, startX: 0.06, startY: 0.1,
+    pulseFreq: 0.0004, pulsePhase: 0, glitchInterval: 12000, glitchTimer: 0,
+    glitchActive: false, glitchStart: 0, glitchDuration: 220,
+    glyphs: [
+      { char: "◆", size: 13, pos: { left: -26, bottom: "18%" }, orbitRadius: 10, orbitSpeed: 0.0009, phase: 0.4 },
+      { char: "▲", size: 11, pos: { right: -20, top: "6%" }, orbitRadius: 7, orbitSpeed: 0.0012, phase: 2.1 },
+    ],
+  },
+  {
+    text: "CREATIVE", color: OFFWHITE, fontSize: 16, strokeWidth: 1, baseOpacity: 0.11,
+    layer: "front", axis: "horizontal", speed: -0.52, angle: 0, startX: 0.72, startY: 0.46,
+    pulseFreq: 0.0005, pulsePhase: 2.5, glitchInterval: 11000, glitchTimer: 0,
+    glitchActive: false, glitchStart: 0, glitchDuration: 250,
+    glyphs: [
+      { char: "■", size: 10, pos: { left: -22, top: "10%" }, orbitRadius: 8, orbitSpeed: 0.001, phase: 4.2 },
+    ],
+  },
+  {
+    text: "VEYRA", color: PURPLE, fontSize: 26, strokeWidth: 2, baseOpacity: 0.1,
+    layer: "front", axis: "diagonal", speed: -0.34, angle: -Math.PI * 0.08, startX: 0.24, startY: 0.8,
+    pulseFreq: 0.00045, pulsePhase: 5.1, glitchInterval: 10000, glitchTimer: 0,
+    glitchActive: false, glitchStart: 0, glitchDuration: 280,
+    glyphs: [
+      { char: "◆", size: 14, pos: { right: -34, bottom: "12%" }, orbitRadius: 12, orbitSpeed: 0.0007, phase: 1.3 },
+      { char: "■", size: 9, pos: { left: -24, top: "-4%" }, orbitRadius: 6, orbitSpeed: 0.0011, phase: 5.6 },
+    ],
+  },
+  /* ── BACK LAYER — larger, blurred, slower ── */
+  {
+    text: "SCALE", color: PURPLE, fontSize: 32, strokeWidth: 2, baseOpacity: 0.055,
+    layer: "back", axis: "horizontal", speed: 0.22, angle: 0, startX: 0.48, startY: 0.2,
+    pulseFreq: 0.00035, pulsePhase: 1.2, glitchInterval: 15000, glitchTimer: 0,
+    glitchActive: false, glitchStart: 0, glitchDuration: 200,
+    glyphs: [
+      { char: "●", size: 11, pos: { right: -30, top: "40%" }, orbitRadius: 9, orbitSpeed: 0.0008, phase: 3.0 },
+    ],
+  },
+  {
+    text: "GROWTH", color: LIME, fontSize: 28, strokeWidth: 1.8, baseOpacity: 0.05,
+    layer: "back", axis: "diagonal", speed: 0.16, angle: Math.PI * 0.42, startX: 0.8, startY: 0.6,
+    pulseFreq: 0.0003, pulsePhase: 3.8, glitchInterval: 16000, glitchTimer: 0,
+    glitchActive: false, glitchStart: 0, glitchDuration: 200,
+    glyphs: [
+      { char: "▲", size: 12, pos: { left: -28, bottom: "24%" }, orbitRadius: 10, orbitSpeed: 0.0007, phase: 0.9 },
+      { char: "●", size: 8, pos: { right: -18, top: "2%" }, orbitRadius: 6, orbitSpeed: 0.001, phase: 2.8 },
+    ],
+  },
+  {
+    text: "OBSESSION", color: OFFWHITE, fontSize: 19, strokeWidth: 1.2, baseOpacity: 0.065,
+    layer: "back", axis: "horizontal", speed: -0.28, angle: 0, startX: 0.14, startY: 0.68,
+    pulseFreq: 0.00055, pulsePhase: 0.7, glitchInterval: 14000, glitchTimer: 0,
+    glitchActive: false, glitchStart: 0, glitchDuration: 160,
+    glyphs: [
+      { char: "●", size: 9, pos: { left: -18, top: "44%" }, orbitRadius: 7, orbitSpeed: 0.0009, phase: 1.7 },
+    ],
+  },
+];
+
+const pad4 = (n: number) => String(Math.abs(Math.round(n)) % 10000).padStart(4, "0");
+const pad3 = (n: number) => String(Math.abs(Math.round(n)) % 1000).padStart(3, "0");
+
+function AmbientTypeField() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const backLayerRef = useRef<HTMLDivElement>(null);
+  const frontLayerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const scanRef = useRef<HTMLDivElement>(null);
+  const wordElsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const glyphElsRef = useRef<Record<string, HTMLSpanElement | null>>({});
+  const lineElsRef = useRef<(SVGLineElement | null)[]>([]);
+  const coordsRef = useRef<HTMLSpanElement>(null);
+  const scanPctRef = useRef<HTMLSpanElement>(null);
+
+  const rafRef = useRef<number>(0);
+  const mouseRef = useRef({ x: 0.5, y: 0.5, active: false });
+  const scrollRef = useRef({ y: 0, velocity: 0, lastY: 0, lastTime: 0 });
+  const statesRef = useRef<WordState[]>([]);
+  const configsRef = useRef<WordConfig[]>([]);
+  const wordDimsRef = useRef<{ w: number; h: number }[]>([]);
+  const dimsRef = useRef({ w: 0, h: 0 });
+  const layerLerpRef = useRef({ x: 0, y: 0 });
+  const layerOffRef = useRef({ backX: 0, backY: 0, frontX: 0, frontY: 0 });
+  const lastPctRef = useRef(-1);
+  const lastCoordsRef = useRef("");
+  const reducedMotionRef = useRef(false);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    reducedMotionRef.current = motionQuery.matches;
+
+    /* ── runtime configs + states ── */
+    configsRef.current = FIELD_WORDS.map((w) => ({ ...w, glyphs: w.glyphs.map((g) => ({ ...g })) }));
+    const dims = { w: window.innerWidth, h: window.innerHeight };
+    dimsRef.current = dims;
+    statesRef.current = configsRef.current.map((cfg) => ({
+      x: cfg.startX * dims.w,
+      y: cfg.startY * dims.h,
+      scale: 1,
+      opacity: cfg.baseOpacity,
+      cursorSkewX: 0,
+      cursorSkewY: 0,
+      cursorOpacityBoost: 0,
+      glitchOffsetX: 0,
+      glitchOffsetY: 0,
+      glitchSkew: 0,
+      glitchSplit: 0,
+      scanSolid: false,
+    }));
+    wordDimsRef.current = configsRef.current.map(() => ({ w: 0, h: 0 }));
+
+    /* ── measure (cached — no per-frame layout reads) ── */
+    const measure = () => {
+      dimsRef.current = { w: window.innerWidth, h: window.innerHeight };
+      configsRef.current.forEach((_, i) => {
+        const el = wordElsRef.current[i];
+        if (el) wordDimsRef.current[i] = { w: el.offsetWidth, h: el.offsetHeight };
+      });
+    };
+    const onResize = () => measure();
+    window.addEventListener("resize", onResize);
+    const measureRaf = requestAnimationFrame(() => measure());
+    let fontsCancelled = false;
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => { if (!fontsCancelled) measure(); });
+    }
+
+    /* ── listeners ── */
+    const onMouseMove = (e: MouseEvent) => {
+      mouseRef.current.x = e.clientX / window.innerWidth;
+      mouseRef.current.y = e.clientY / window.innerHeight;
+      mouseRef.current.active = true;
+    };
+    const onMouseLeave = () => { mouseRef.current.active = false; };
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    document.addEventListener("mouseleave", onMouseLeave);
+
+    const onScroll = () => {
+      const now = performance.now();
+      const dt = now - scrollRef.current.lastTime;
+      if (dt > 0) {
+        const rawVel = Math.abs(window.scrollY - scrollRef.current.lastY) / dt;
+        scrollRef.current.velocity += (rawVel - scrollRef.current.velocity) * 0.1;
+      }
+      scrollRef.current.lastY = window.scrollY;
+      scrollRef.current.lastTime = now;
+      scrollRef.current.y = window.scrollY;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    /* ── static frame for reduced motion ── */
+    const renderStatic = () => {
+      const configs = configsRef.current;
+      const states = statesRef.current;
+      const d = dimsRef.current;
+      for (let i = 0; i < configs.length; i++) {
+        const el = wordElsRef.current[i];
+        const s = states[i];
+        if (!el) continue;
+        s.x = configs[i].startX * d.w;
+        s.y = configs[i].startY * d.h;
+        el.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`;
+        el.style.opacity = String(configs[i].baseOpacity * 0.8);
+        el.style.color = "transparent";
+        el.style.textShadow = "none";
+      }
+      if (scanRef.current) scanRef.current.style.display = "none";
+      if (backLayerRef.current) backLayerRef.current.style.transform = "none";
+      if (frontLayerRef.current) frontLayerRef.current.style.transform = "none";
+      if (gridRef.current) gridRef.current.style.transform = "none";
+      lineElsRef.current.forEach((l) => l && (l.style.strokeOpacity = "0"));
+      if (coordsRef.current) coordsRef.current.textContent = "X 0000 · Y 0000 · V 0.00";
+      if (scanPctRef.current) scanPctRef.current.textContent = "000";
+    };
+
+    /* ── main loop ── */
+    let lastFrameTime = performance.now();
+
+    const loop = (timestamp: number) => {
+      if (reducedMotionRef.current) return;
+
+      const dt = Math.min(timestamp - lastFrameTime, 50);
+      lastFrameTime = timestamp;
+      const dtF = dt / 16.667;
+
+      const d = dimsRef.current;
+      const configs = configsRef.current;
+      const states = statesRef.current;
+      const mouse = mouseRef.current;
+      const scroll = scrollRef.current;
+
+      const speedMult = 1 + Math.min(scroll.velocity * 12, 3);
+      const glitchMult = 1 + Math.min(scroll.velocity * 8, 2);
+      scroll.velocity *= 0.95;
+
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollProg = docH > 0 ? scroll.y / docH : 0;
+
+      /* ── layer parallax (cursor + scroll progress) ── */
+      const ll = layerLerpRef.current;
+      const tmx = mouse.active ? (mouse.x - 0.5) * 2 : 0;
+      const tmy = mouse.active ? (mouse.y - 0.5) * 2 : 0;
+      ll.x += (tmx - ll.x) * 0.03;
+      ll.y += (tmy - ll.y) * 0.03;
+
+      const off = layerOffRef.current;
+      off.backX = ll.x * -10;
+      off.backY = ll.y * -6 + scrollProg * -36;
+      off.frontX = ll.x * -26;
+      off.frontY = ll.y * -16 + scrollProg * -90;
+
+      if (backLayerRef.current)
+        backLayerRef.current.style.transform = `translate3d(${off.backX}px, ${off.backY}px, 0)`;
+      if (frontLayerRef.current)
+        frontLayerRef.current.style.transform = `translate3d(${off.frontX}px, ${off.frontY}px, 0)`;
+
+      /* ── blueprint grid shift ── */
+      if (gridRef.current) {
+        const gy = -((scroll.y * 0.06) % 120);
+        const gx = ll.x * -6 - ((scroll.y * 0.012) % 120);
+        gridRef.current.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+      }
+
+      /* ── scan line sweep ── */
+      const scanProg = (timestamp % SCAN_PERIOD) / SCAN_PERIOD;
+      const scanY = scanProg * (d.h + 260) - 130;
+      if (scanRef.current) scanRef.current.style.transform = `translate3d(0, ${scanY}px, 0)`;
+      const pct = Math.round(scanProg * 100);
+      if (pct !== lastPctRef.current) {
+        lastPctRef.current = pct;
+        if (scanPctRef.current) scanPctRef.current.textContent = pad3(pct);
+      }
+
+      /* ── words ── */
+      const centers: { x: number; y: number }[] = [];
+
+      for (let i = 0; i < configs.length; i++) {
+        const cfg = configs[i];
+        const s = states[i];
+        const el = wordElsRef.current[i];
+        if (!el) { centers.push({ x: -9999, y: -9999 }); continue; }
+
+        const cached = wordDimsRef.current[i];
+        const wordW = cached.w || (cfg.fontSize / 100) * d.w * cfg.text.length * 0.62;
+        const wordH = cached.h || (cfg.fontSize / 100) * d.w * 1.05;
+        const layerSpeed = cfg.layer === "back" ? 0.55 : 1;
+        const layerOffX = cfg.layer === "back" ? off.backX : off.frontX;
+        const layerOffY = cfg.layer === "back" ? off.backY : off.frontY;
+        const margin = wordW * 0.6;
+
+        /* drift */
+        const vx = Math.cos(cfg.angle) * cfg.speed * layerSpeed * speedMult * dtF;
+        const vy = Math.sin(cfg.angle) * cfg.speed * layerSpeed * speedMult * dtF;
+
+        if (cfg.axis === "horizontal") {
+          s.x += vx;
+          if (cfg.speed > 0 && s.x > d.w + margin) s.x = -wordW - margin * 0.5;
+          if (cfg.speed < 0 && s.x < -wordW - margin) s.x = d.w + margin * 0.5;
+        } else if (cfg.axis === "vertical") {
+          s.y += vy;
+          if (cfg.speed > 0 && s.y > d.h + wordH) s.y = -wordH - 50;
+          if (cfg.speed < 0 && s.y < -wordH - 50) s.y = d.h + wordH;
+        } else {
+          s.x += vx;
+          s.y += vy;
+          if (s.x > d.w + margin) s.x = -wordW - margin * 0.5;
+          if (s.x < -wordW - margin) s.x = d.w + margin * 0.5;
+          if (s.y > d.h + wordH) s.y = -wordH - 50;
+          if (s.y < -wordH - 50) s.y = d.h + wordH;
+        }
+
+        /* scale pulse 95%–105% */
+        s.scale = 1 + Math.sin(timestamp * cfg.pulseFreq + cfg.pulsePhase) * 0.05;
+
+        /* glitch bursts */
+        cfg.glitchTimer += dt * glitchMult;
+        if (!cfg.glitchActive && cfg.glitchTimer >= cfg.glitchInterval) {
+          cfg.glitchActive = true;
+          cfg.glitchStart = timestamp;
+          cfg.glitchTimer = 0;
+          cfg.glitchInterval = 10000 + Math.random() * 6000;
+        }
+        if (cfg.glitchActive) {
+          const elapsed = timestamp - cfg.glitchStart;
+          if (elapsed < cfg.glitchDuration) {
+            const intensity = Math.sin((elapsed / cfg.glitchDuration) * Math.PI);
+            s.glitchOffsetX = (Math.random() - 0.5) * 8 * intensity;
+            s.glitchOffsetY = (Math.random() - 0.5) * 4 * intensity;
+            s.glitchSkew = (Math.random() - 0.5) * 12 * intensity;
+            s.glitchSplit = Math.random() > 0.5 ? 1 : 0;
+          } else {
+            cfg.glitchActive = false;
+            s.glitchOffsetX = 0;
+            s.glitchOffsetY = 0;
+            s.glitchSkew = 0;
+            s.glitchSplit = 0;
+          }
+        }
+
+        /* cursor proximity — magnetic lean + opacity nudge */
+        const centerX = s.x + wordW / 2 + layerOffX;
+        const centerY = s.y + wordH / 2 + layerOffY;
+        centers.push({ x: centerX, y: centerY });
+
+        const cursorStiffness = cfg.layer === "back" ? 0.6 : 1;
+        if (mouse.active) {
+          const ndx = mouse.x - centerX / d.w;
+          const ndy = mouse.y - centerY / d.h;
+          const dist = Math.sqrt(ndx * ndx + ndy * ndy);
+          const influence = Math.max(0, 1 - dist / 0.4);
+          s.cursorSkewX += (ndx * influence * 6 * cursorStiffness - s.cursorSkewX) * 0.04;
+          s.cursorSkewY += (ndy * influence * 3 * cursorStiffness - s.cursorSkewY) * 0.04;
+          s.cursorOpacityBoost += (influence * 0.08 - s.cursorOpacityBoost) * 0.04;
+        } else {
+          s.cursorSkewX += (0 - s.cursorSkewX) * 0.03;
+          s.cursorSkewY += (0 - s.cursorSkewY) * 0.03;
+          s.cursorOpacityBoost += (0 - s.cursorOpacityBoost) * 0.03;
+        }
+
+        /* scan-line pass → outline briefly goes solid + glow */
+        const solid = Math.abs(centerY - scanY) < 64;
+        if (solid !== s.scanSolid) {
+          s.scanSolid = solid;
+          el.style.color = solid ? cfg.color : "transparent";
+        }
+
+        /* opacity — capped, eased */
+        const targetOpacity = solid
+          ? Math.min(cfg.baseOpacity + 0.34, 0.55)
+          : Math.min(cfg.baseOpacity + s.cursorOpacityBoost, 0.18);
+        s.opacity += (targetOpacity - s.opacity) * 0.12;
+        el.style.opacity = String(s.opacity);
+
+        /* shadow priority: glitch split > scan glow > none */
+        let shadow = "none";
+        if (cfg.glitchActive && s.glitchSplit) {
+          shadow = `${s.glitchOffsetX * 0.5}px 0 rgba(214,255,63,0.3), ${-s.glitchOffsetX * 0.5}px 0 rgba(139,124,246,0.3)`;
+        } else if (s.scanSolid) {
+          shadow = `0 0 26px ${cfg.color}66, 0 0 64px ${cfg.color}30`;
+        }
+        el.style.textShadow = shadow;
+
+        /* transform */
+        el.style.transform = `translate3d(${s.x + s.glitchOffsetX}px, ${s.y + s.glitchOffsetY}px, 0) scale(${s.scale}) skewX(${s.cursorSkewX + s.glitchSkew}deg) skewY(${s.cursorSkewY}deg)`;
+
+        /* glyph accents — small orbits along baselines/corners */
+        cfg.glyphs.forEach((g, gi) => {
+          const gEl = glyphElsRef.current[`${i}:${gi}`];
+          if (!gEl) return;
+          const a = timestamp * g.orbitSpeed + g.phase;
+          gEl.style.transform = `translate3d(${Math.cos(a) * g.orbitRadius}px, ${Math.sin(a) * g.orbitRadius * 0.6}px, 0)`;
+        });
+      }
+
+      /* ── connector lines — intensify with scroll velocity ── */
+      const threshold = Math.hypot(d.w, d.h) * 0.38;
+      const energy = Math.min(Math.max((speedMult - 1) / 3, 0), 1);
+      const pairs: { a: number; b: number; dist: number }[] = [];
+      for (let i = 0; i < centers.length; i++) {
+        for (let j = i + 1; j < centers.length; j++) {
+          const dx = centers[i].x - centers[j].x;
+          const dy = centers[i].y - centers[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < threshold) pairs.push({ a: i, b: j, dist });
+        }
+      }
+      pairs.sort((p1, p2) => p1.dist - p2.dist);
+      for (let k = 0; k < LINE_POOL; k++) {
+        const line = lineElsRef.current[k];
+        if (!line) continue;
+        const p = pairs[k];
+        if (p && energy > 0.01) {
+          line.setAttribute("x1", String(centers[p.a].x));
+          line.setAttribute("y1", String(centers[p.a].y));
+          line.setAttribute("x2", String(centers[p.b].x));
+          line.setAttribute("y2", String(centers[p.b].y));
+          line.style.strokeOpacity = String((0.02 + energy * 0.13) * (1 - p.dist / threshold));
+        } else {
+          line.style.strokeOpacity = "0";
+        }
+      }
+
+      /* ── telemetry: drifting coordinates + velocity ── */
+      const cx = Math.round(scroll.y * 0.5 + mouse.x * 400);
+      const cy = Math.round(scroll.y + mouse.y * 400);
+      const coordsStr = `X ${pad4(cx)} · Y ${pad4(cy)} · V ${scroll.velocity.toFixed(2)}`;
+      if (coordsStr !== lastCoordsRef.current) {
+        lastCoordsRef.current = coordsStr;
+        if (coordsRef.current) coordsRef.current.textContent = coordsStr;
+      }
+
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    const onMotionChange = (e: MediaQueryListEvent) => {
+      reducedMotionRef.current = e.matches;
+      if (e.matches) {
+        cancelAnimationFrame(rafRef.current);
+        renderStatic();
+      } else {
+        if (scanRef.current) scanRef.current.style.display = "block";
+        lastFrameTime = performance.now();
+        rafRef.current = requestAnimationFrame(loop);
+      }
+    };
+    motionQuery.addEventListener("change", onMotionChange);
+
+    if (reducedMotionRef.current) {
+      renderStatic();
+    } else {
+      rafRef.current = requestAnimationFrame(loop);
+    }
+
+    return () => {
+      fontsCancelled = true;
+      cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(measureRaf);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseleave", onMouseLeave);
+      window.removeEventListener("scroll", onScroll);
+      motionQuery.removeEventListener("change", onMotionChange);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      aria-hidden="true"
+      style={{ background: "#0B0D12" }}
+    >
+      {/* ── blueprint grid ── */}
+      <div
+        ref={gridRef}
+        className="absolute -inset-[10%]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(245,243,238,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(245,243,238,0.035) 1px, transparent 1px), linear-gradient(rgba(245,243,238,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(245,243,238,0.016) 1px, transparent 1px)`,
+          backgroundSize: "120px 120px, 120px 120px, 24px 24px, 24px 24px",
+          willChange: "transform",
+        }}
+      />
+
+      {/* ── connector lines ── */}
+      <svg className="absolute inset-0 h-full w-full">
+        {Array.from({ length: LINE_POOL }, (_, k) => (
+          <line
+            key={k}
+            ref={(el) => { lineElsRef.current[k] = el; }}
+            stroke={k % 2 === 0 ? LIME : PURPLE}
+            strokeWidth={1}
+            strokeDasharray="3 7"
+            style={{ strokeOpacity: 0 }}
+          />
+        ))}
+      </svg>
+
+      {/* ── BACK LAYER — large, blurred, slow ── */}
+      <div
+        ref={backLayerRef}
+        className="absolute inset-0"
+        style={{ filter: "blur(3px)", willChange: "transform" }}
+      >
+        {FIELD_WORDS.map((cfg, i) =>
+          cfg.layer !== "back" ? null : (
+            <div
+              key={cfg.text}
+              ref={(el) => { wordElsRef.current[i] = el; }}
+              className="absolute left-0 top-0 select-none whitespace-nowrap"
+              style={{
+                fontSize: `${cfg.fontSize}vw`,
+                fontFamily: "var(--font-display)",
+                fontWeight: 800,
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
+                color: "transparent",
+                WebkitTextStroke: `${cfg.strokeWidth}px ${cfg.color}`,
+                opacity: cfg.baseOpacity,
+                transform: `translate3d(${cfg.startX * 100}vw, ${cfg.startY * 100}vh, 0)`,
+                transition: "color 0.28s ease",
+                willChange: "transform, opacity",
+              }}
+            >
+              {cfg.text}
+              {cfg.glyphs.map((g, gi) => (
+                <span
+                  key={gi}
+                  ref={(el) => { glyphElsRef.current[`${i}:${gi}`] = el; }}
+                  className="absolute select-none"
+                  style={{
+                    ...g.pos,
+                    fontSize: g.size,
+                    lineHeight: 1,
+                    color: cfg.color,
+                    opacity: 0.2,
+                    textShadow: `0 0 8px ${cfg.color}55`,
+                    willChange: "transform",
+                  }}
+                >
+                  {g.char}
+                </span>
+              ))}
+            </div>
+          )
+        )}
+      </div>
+
+      {/* ── FRONT LAYER — sharp, faster ── */}
+      <div ref={frontLayerRef} className="absolute inset-0" style={{ willChange: "transform" }}>
+        {FIELD_WORDS.map((cfg, i) =>
+          cfg.layer !== "front" ? null : (
+            <div
+              key={cfg.text}
+              ref={(el) => { wordElsRef.current[i] = el; }}
+              className="absolute left-0 top-0 select-none whitespace-nowrap"
+              style={{
+                fontSize: `${cfg.fontSize}vw`,
+                fontFamily: "var(--font-display)",
+                fontWeight: 800,
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
+                color: "transparent",
+                WebkitTextStroke: `${cfg.strokeWidth}px ${cfg.color}`,
+                opacity: cfg.baseOpacity,
+                transform: `translate3d(${cfg.startX * 100}vw, ${cfg.startY * 100}vh, 0)`,
+                transition: "color 0.28s ease",
+                willChange: "transform, opacity",
+              }}
+            >
+              {cfg.text}
+              {cfg.glyphs.map((g, gi) => (
+                <span
+                  key={gi}
+                  ref={(el) => { glyphElsRef.current[`${i}:${gi}`] = el; }}
+                  className="absolute select-none"
+                  style={{
+                    ...g.pos,
+                    fontSize: g.size,
+                    lineHeight: 1,
+                    color: cfg.color,
+                    opacity: 0.32,
+                    textShadow: `0 0 8px ${cfg.color}55`,
+                    willChange: "transform",
+                  }}
+                >
+                  {g.char}
+                </span>
+              ))}
+            </div>
+          )
+        )}
+      </div>
+
+      {/* ── scan line ── */}
+      <div
+        ref={scanRef}
+        className="absolute inset-x-0 top-0"
+        style={{ height: 160, willChange: "transform", transform: "translate3d(0,-200px,0)" }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent, rgba(214,255,63,0.045) 38%, rgba(139,124,246,0.06) 52%, transparent)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 top-1/2 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(214,255,63,0.35) 30%, rgba(139,124,246,0.35) 70%, transparent)",
+            boxShadow: "0 0 18px rgba(214,255,63,0.22)",
+          }}
+        />
+      </div>
+
+      {/* ── vignette + scrims (readability) ── */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 65% 55% at 50% 50%, transparent 30%, rgba(8,10,15,0.5) 78%, rgba(8,10,15,0.78) 100%)",
+        }}
+      />
+      <div
+        className="absolute inset-x-0 top-0 h-[12%]"
+        style={{ background: "linear-gradient(to bottom, rgba(8,10,15,0.5), transparent)" }}
+      />
+      <div
+        className="absolute inset-x-0 bottom-0 h-[12%]"
+        style={{ background: "linear-gradient(to top, rgba(8,10,15,0.5), transparent)" }}
+      />
+
+      {/* ── corner telemetry ── */}
+      <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
+        <span className="text-[10px] uppercase tracking-[0.2em] text-white/60" style={{ fontFamily: "var(--font-mono)" }}>
+          Field_active
+        </span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-[#D6FF3F]/50" style={{ fontFamily: "var(--font-mono)" }}>
+          · Nodes 06
+        </span>
+      </div>
+      <div
+        className="absolute bottom-5 left-5 hidden text-[10px] uppercase tracking-[0.25em] text-white/30 sm:block"
+        style={{ fontFamily: "var(--font-mono)" }}
+      >
+        <span ref={coordsRef}>X 0000 · Y 0000 · V 0.00</span>
+      </div>
+      <div
+        className="absolute bottom-5 right-5 flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/30"
+        style={{ fontFamily: "var(--font-mono)" }}
+      >
+        <span className="h-1 w-1 rounded-full bg-[#8B7CF6]/70" />
+        Scan&nbsp;<span ref={scanPctRef} className="tabular-nums text-[#8B7CF6]/60">000</span>%
+      </div>
+    </div>
+  );
+}
+
+/* ─── Scroll Sequence (cinematic intro) ──────────────── */
 const FRAME_COUNT = 200;
 const FRAME_PREFIX = "ezgif-frame-";
 const FRAME_EXT = ".jpg";
@@ -112,7 +798,7 @@ function ScrollSequence() {
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const frameRef = useRef(0);
   const rafRef = useRef<number>(0);
-  const presentsRef = useRef<HTMLDivElement>(null); // ← "Veyra presents" ref
+  const presentsRef = useRef<HTMLDivElement>(null);
   const [loadedCount, setLoadedCount] = useState(0);
   const [ready, setReady] = useState(false);
 
@@ -163,12 +849,10 @@ function ScrollSequence() {
         rafRef.current = requestAnimationFrame(() => drawFrame(targetFrame));
       }
 
-      // ── Fade out "Veyra presents" as user scrolls ──
       if (presentsRef.current) {
-        // Fade out over the first 25% of scroll progress
         const fadeEnd = 0.25;
         const opacity = Math.max(0, 1 - clamped / fadeEnd);
-        const translateY = clamped * -40; // slight upward drift
+        const translateY = clamped * -40;
         presentsRef.current.style.opacity = String(opacity);
         presentsRef.current.style.transform = `translateY(${translateY}px)`;
       }
@@ -185,7 +869,7 @@ function ScrollSequence() {
   const loadPercent = Math.round((loadedCount / FRAME_COUNT) * 100);
 
   return (
-    <section ref={containerRef} className="relative w-full" style={{ height: `${FRAME_COUNT * 1.2}vh` }}>
+    <section ref={containerRef} className="relative z-10 w-full" style={{ height: `${FRAME_COUNT * 1.2}vh` }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#0B0D12]">
         <canvas ref={canvasRef} className="h-full w-full object-cover" style={{ display: ready ? "block" : "none" }} />
         {!ready && (
@@ -199,28 +883,19 @@ function ScrollSequence() {
           </div>
         )}
 
-        {/* ── "Veyra presents" — left side, fades on scroll ── */}
         <div
           ref={presentsRef}
           className="pointer-events-none absolute left-6 top-1/2 z-20 -translate-y-1/2 md:left-10 lg:left-14"
           style={{ opacity: 1, transition: "opacity 0.1s linear" }}
         >
           <div className="flex flex-col gap-3">
-            {/* small decorative line */}
             <div className="h-px w-10 bg-gradient-to-r from-[#D6FF3F]/80 to-transparent" />
-            <p
-              className="text-[11px] uppercase tracking-[0.35em] text-white/50 md:text-[12px]"
-              style={{ fontFamily: "var(--font-mono)" }}
-            >
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50 md:text-[12px]" style={{ fontFamily: "var(--font-mono)" }}>
               Veyra
             </p>
-            <p
-              className="text-[11px] uppercase tracking-[0.35em] text-white/30 md:text-[12px]"
-              style={{ fontFamily: "var(--font-mono)" }}
-            >
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/30 md:text-[12px]" style={{ fontFamily: "var(--font-mono)" }}>
               presents
             </p>
-            {/* small decorative dot */}
             <div className="mt-1 h-1.5 w-1.5 rounded-full bg-[#D6FF3F]/60 animate-pulse" />
           </div>
         </div>
@@ -237,12 +912,10 @@ function ScrollSequence() {
   );
 }
 
-/* ─── Spline showpiece ("Step inside the lab") ────────── */
+/* ─── Spline showpiece ───────────────────────────────── */
 function SplineShowpiece() {
   return (
-    <section className="relative overflow-hidden border-t border-white/[0.06] px-6 py-32 md:px-10">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[440px] w-[860px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8B7CF6]/20 blur-[130px]" />
-      <div className="pointer-events-none absolute left-[38%] top-1/2 h-[360px] w-[520px] max-w-[80vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#D6FF3F]/12 blur-[130px]" />
+    <section className="relative z-10 overflow-hidden border-t border-white/[0.06] px-6 py-32 md:px-10">
       <div className="relative mx-auto max-w-6xl">
         <Reveal>
           <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
@@ -262,7 +935,7 @@ function SplineShowpiece() {
           </Reveal>
         </div>
         <Reveal delay={180}>
-          <div className="group relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-[#0B0D12] shadow-[0_50px_140px_-40px_rgba(139,124,246,0.45)]">
+          <div className="group relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-[#0B0D12]/80 backdrop-blur-sm shadow-[0_50px_140px_-40px_rgba(139,124,246,0.45)]">
             <div className="relative h-[58vh] min-h-[400px] w-full sm:h-[66vh] lg:h-[70vh]">
               <iframe
                 src="https://my.spline.design/booleansinteractioncopycopy-tmPEv7BelAEG9pCQbWci6jvb-Ool/"
@@ -297,7 +970,7 @@ function SplineShowpiece() {
   );
 }
 
-/* ─── animated skill meter (used by the portrait cards) ─ */
+/* ─── animated skill meter ───────────────────────────── */
 function SkillBar({ label, value, color, delay = 0 }: { label: string; value: number; color: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(false);
@@ -343,7 +1016,7 @@ function SkillBar({ label, value, color, delay = 0 }: { label: string; value: nu
   );
 }
 
-/* ─── animated portrait card (founder / co-founder) ───── */
+/* ─── animated portrait card ─────────────────────────── */
 function PortraitCard({
   accent,
   eyebrow,
@@ -588,8 +1261,8 @@ function PortraitCard({
   );
 
   return (
-    <section ref={sectionRef} className="relative border-t border-white/[0.06] px-6 py-28 md:px-10">
-      <div className="mx-auto max-w-7xl">
+    <section ref={sectionRef} className="relative z-10 border-t border-white/[0.06] px-6 py-28 md:px-10">
+      <div className="relative mx-auto max-w-7xl">
         <Reveal>
           <p className="mb-4 text-[12px] uppercase tracking-[0.25em]" style={{ fontFamily: "var(--font-mono)", color }}>
             {eyebrow}
@@ -618,54 +1291,12 @@ const capabilities = [
 ];
 
 const work = [
-  {
-    tag: "Local SEO",
-    title: "Google Business Profile",
-    metric: "+210% map views",
-    desc: "Listings tuned for the map pack — more calls, more directions, more walk-ins.",
-    img: "/work/googlebusiness_profile.png",
-    gradient: "from-[#D6FF3F]/40 to-[#8B7CF6]/20",
-  },
-  {
-    tag: "Paid Media",
-    title: "Performance Marketing",
-    metric: "3.4× ROAS",
-    desc: "Paid funnels built like lab experiments: hypothesis, test, scale, repeat.",
-    img: "/work/performance_marketing.png",
-    gradient: "from-[#8B7CF6]/40 to-[#D6FF3F]/20",
-  },
-  {
-    tag: "Production",
-    title: "Shooting Videos",
-    metric: "40+ shoots / mo",
-    desc: "Scroll-stopping short-form and brand films — shot, lit, and cut in-house.",
-    img: "/work/Shooting.png",
-    gradient: "from-[#D6FF3F]/30 to-[#8B7CF6]/30",
-  },
-  {
-    tag: "Always-on",
-    title: "Social Media Management",
-    metric: "12M organic reach",
-    desc: "Calendars, community, and content that keep the brand alive between launches.",
-    img: "/work/socialmedia_management.png",
-    gradient: "from-[#8B7CF6]/30 to-[#D6FF3F]/30",
-  },
-  {
-    tag: "Organic",
-    title: "Website SEO",
-    metric: "+180% organic traffic",
-    desc: "Technical + on-page SEO engineered to compound quietly, month over month.",
-    img: "/work/Website_seo.png",
-    gradient: "from-[#D6FF3F]/40 to-[#8B7CF6]/10",
-  },
-  {
-    tag: "Full-funnel",
-    title: "Performance + Content",
-    metric: "−38% cost per lead",
-    desc: "Creative that performs — ads and content tuned to the same north-star metric.",
-    img: "/work/performance_marketing_content.png",
-    gradient: "from-[#8B7CF6]/40 to-[#D6FF3F]/10",
-  },
+  { tag: "Local SEO", title: "Google Business Profile", metric: "+210% map views", desc: "Listings tuned for the map pack — more calls, more directions, more walk-ins.", img: "/work/googlebusiness_profile.png", gradient: "from-[#D6FF3F]/40 to-[#8B7CF6]/20" },
+  { tag: "Paid Media", title: "Performance Marketing", metric: "3.4× ROAS", desc: "Paid funnels built like lab experiments: hypothesis, test, scale, repeat.", img: "/work/performance_marketing.png", gradient: "from-[#8B7CF6]/40 to-[#D6FF3F]/20" },
+  { tag: "Production", title: "Shooting Videos", metric: "40+ shoots / mo", desc: "Scroll-stopping short-form and brand films — shot, lit, and cut in-house.", img: "/work/Shooting.png", gradient: "from-[#D6FF3F]/30 to-[#8B7CF6]/30" },
+  { tag: "Always-on", title: "Social Media Management", metric: "12M organic reach", desc: "Calendars, community, and content that keep the brand alive between launches.", img: "/work/socialmedia_management.png", gradient: "from-[#8B7CF6]/30 to-[#D6FF3F]/30" },
+  { tag: "Organic", title: "Website SEO", metric: "+180% organic traffic", desc: "Technical + on-page SEO engineered to compound quietly, month over month.", img: "/work/Website_seo.png", gradient: "from-[#D6FF3F]/40 to-[#8B7CF6]/10" },
+  { tag: "Full-funnel", title: "Performance + Content", metric: "−38% cost per lead", desc: "Creative that performs — ads and content tuned to the same north-star metric.", img: "/work/performance_marketing_content.png", gradient: "from-[#8B7CF6]/40 to-[#D6FF3F]/10" },
 ];
 
 const workStats = [
@@ -681,20 +1312,12 @@ const philosophy = [
   { num: "03", text: "Great work outlives the campaign that launched it." },
 ];
 
-/* ═══════════════════════════════════════════════════════
-   MANIFESTO SECTION — TRIMMED (only hello.webp remains)
-   ═══════════════════════════════════════════════════════ */
-
+/* ─── Manifesto ──────────────────────────────────────── */
 function ManifestoSequence() {
   return (
-    <section className="relative w-full bg-[#0B0D12]" style={{ height: `100vh` }}>
+    <section className="relative z-10 w-full bg-[#0B0D12]" style={{ height: `100vh` }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#0B0D12]">
-        <img
-          src="/veyra-sequence-again/hello.webp"
-          alt="Hero Animation"
-          className="h-full w-full object-cover"
-          decoding="async"
-        />
+        <img src="/veyra-sequence-again/hello.webp" alt="Hero Animation" className="h-full w-full object-cover" decoding="async" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0B0D12] via-[#0B0D12]/60 to-transparent" />
         <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 transition-opacity duration-500">
           <div className="flex flex-col items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
@@ -711,28 +1334,26 @@ function ManifestoSection() {
   return (
     <div>
       <ManifestoSequence />
-      {/* ── Everything below hello.webp removed — ready for your new content ── */}
     </div>
   );
 }
 
-/* ─── HOME PAGE COMPONENT ─────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   HOME PAGE
+   ═══════════════════════════════════════════════════════ */
 export default function Home() {
   return (
-    <main>
+    <main className="relative">
+      {/* Giant kinetic typography field — fixed, behind everything */}
+      <AmbientTypeField />
+
       <ScrollProgress />
 
-      {/* 1. SCROLL SEQUENCE (cinematic intro) — now with "Veyra presents" */}
+      {/* 1. SCROLL SEQUENCE (cinematic intro) */}
       <ScrollSequence />
 
       {/* 2. HERO */}
-      <section className="relative flex min-h-[88vh] items-center overflow-hidden border-t border-white/[0.06] px-6 md:px-10">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[65%]" style={{ background: "radial-gradient(ellipse 80% 60% at 50% -12%, rgba(255,150,80,0.18), rgba(255,120,60,0.06) 35%, transparent 72%)" }} />
-        <div className="pointer-events-none absolute -left-24 top-1/4 h-96 w-96 rounded-full bg-[#8B7CF6]/15 blur-[120px]" />
-        <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[#D6FF3F]/10 blur-[120px]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.04]">
-          <div style={{ backgroundImage: "radial-gradient(circle, #F5F3EE 1px, transparent 1px)", backgroundSize: "32px 32px", width: "100%", height: "100%" }} />
-        </div>
+      <section className="relative z-10 flex min-h-[88vh] items-center overflow-hidden border-t border-white/[0.06] px-6 md:px-10">
         <div className="relative mx-auto w-full max-w-7xl">
           <div className="max-w-3xl">
             <Reveal>
@@ -771,16 +1392,7 @@ export default function Home() {
       </section>
 
       {/* 3. PHILOSOPHY */}
-      <section className="parallax-section relative border-t border-white/[0.06] px-6 py-36 md:px-10 md:py-44">
-        <ScrollParallax speed={0.5} direction="up" className="absolute inset-0 pointer-events-none">
-          <div className="parallax-bg-orb" style={{ width: 500, height: 500, top: "-10%", left: "-8%", background: "radial-gradient(circle, #8B7CF6 0%, transparent 70%)" }} />
-        </ScrollParallax>
-        <ScrollParallax speed={0.3} direction="down" className="absolute inset-0 pointer-events-none">
-          <div className="parallax-bg-orb" style={{ width: 400, height: 400, bottom: "-5%", right: "-5%", background: "radial-gradient(circle, #D6FF3F 0%, transparent 70%)" }} />
-        </ScrollParallax>
-        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.04]">
-          <div style={{ backgroundImage: "radial-gradient(circle, #F5F3EE 1px, transparent 1px)", backgroundSize: "32px 32px", width: "100%", height: "100%" }} />
-        </div>
+      <section className="relative z-10 border-t border-white/[0.06] px-6 py-36 md:px-10 md:py-44">
         <div className="relative mx-auto max-w-5xl">
           <Reveal>
             <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
@@ -803,12 +1415,12 @@ export default function Home() {
             {philosophy.map((p, i) => (
               <ScrollParallax key={p.num} speed={0.12 + i * 0.06} direction="up">
                 <Reveal delay={280 + i * 120}>
-                  <div className="group relative py-8 md:py-0">
+                  <div className="group relative rounded-2xl p-6 transition-colors duration-500 hover:bg-white/[0.02] md:p-8">
                     <p className="mb-4 text-5xl font-bold text-white/[0.04] transition-colors duration-500 group-hover:text-[#D6FF3F]/20" style={{ fontFamily: "var(--font-display)" }}>
                       {p.num}
                     </p>
                     <p className="text-base leading-relaxed text-white/55 transition-colors duration-500 group-hover:text-white/80 sm:text-lg">{p.text}</p>
-                    <div className="mt-6 h-px w-12 bg-white/10 transition-all duration-500 group-hover:w-20 group-hover:bg-[#D6FF3F]/50 md:block" />
+                    <div className="mt-6 h-px w-12 bg-white/10 transition-all duration-500 group-hover:w-20 group-hover:bg-[#D6FF3F]/50" />
                   </div>
                 </Reveal>
               </ScrollParallax>
@@ -818,8 +1430,8 @@ export default function Home() {
       </section>
 
       {/* 4. CAPABILITIES */}
-      <section id="capabilities" className="relative border-t border-white/[0.06] px-6 py-32 md:px-10">
-        <div className="mx-auto max-w-7xl">
+      <section id="capabilities" className="relative z-10 border-t border-white/[0.06] px-6 py-32 md:px-10">
+        <div className="relative mx-auto max-w-7xl">
           <Reveal>
             <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>
               What we build
@@ -833,7 +1445,7 @@ export default function Home() {
           <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-2xl bg-white/[0.06] sm:grid-cols-2">
             {capabilities.map((cap, i) => (
               <Reveal key={cap.title} delay={i * 90}>
-                <div className="group h-full bg-[#0B0D12] p-8 transition-all duration-300 hover:bg-[#12141b] md:p-10 relative overflow-hidden">
+                <div className="group h-full bg-[#0B0D12]/80 backdrop-blur-sm p-8 transition-all duration-300 hover:bg-[#12141b]/90 md:p-10 relative overflow-hidden">
                   <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-[#D6FF3F]/0 transition-all duration-500 blur-[60px] group-hover:bg-[#D6FF3F]/10" />
                   <div className="relative">
                     <div className="mb-8 flex items-center justify-between">
@@ -854,114 +1466,85 @@ export default function Home() {
         </div>
       </section>
 
-{/* 5. SELECTED WORK */}
-<section id="work" className="relative border-t border-white/[0.06] px-6 py-32 md:px-10">
-  <div className="mx-auto max-w-7xl">
-    <div className="mb-16 flex flex-wrap items-end justify-between gap-6">
-      <div>
-        <Reveal>
-          <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
-            Selected work
-          </p>
-        </Reveal>
-        <Reveal delay={80}>
-          <h2 className="max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-            Results that outlive the campaign.
-          </h2>
-        </Reveal>
-      </div>
-      <Reveal delay={120}>
-        <a href="#contact" className="whitespace-nowrap text-sm text-white/60 underline underline-offset-4 transition hover:text-white">
-          View all case studies →
-        </a>
-      </Reveal>
-    </div>
-
-    {/* ── 6 work cards ─────────────────────────────────── */}
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {work.map((w, i) => (
-        <Reveal key={w.title} delay={i * 90}>
-          <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#12141b] transition-all duration-300 hover:-translate-y-1 hover:border-white/[0.15]">
-            {/* image */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden">
-              <img
-                src={w.img}
-                alt={w.title}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-              />
-              {/* bottom fade so the card body blends in */}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#12141b] via-[#12141b]/10 to-transparent" />
-              {/* accent tint on hover */}
-              <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${w.gradient} opacity-0 mix-blend-soft-light transition-opacity duration-300 group-hover:opacity-50`} />
-              {/* category pill */}
-              <span
-                className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                {w.tag}
-              </span>
-              {/* index number */}
-              <span
-                className="absolute right-4 top-4 text-[11px] tabular-nums text-white/45"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </span>
+      {/* 5. SELECTED WORK */}
+      <section id="work" className="relative z-10 border-t border-white/[0.06] px-6 py-32 md:px-10">
+        <div className="relative mx-auto max-w-7xl">
+          <div className="mb-16 flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <Reveal>
+                <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
+                  Selected work
+                </p>
+              </Reveal>
+              <Reveal delay={80}>
+                <h2 className="max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
+                  Results that outlive the campaign.
+                </h2>
+              </Reveal>
             </div>
-
-            {/* body */}
-            <div className="relative flex flex-1 flex-col p-6">
-              <h3 className="text-xl transition-colors duration-300 group-hover:text-[#D6FF3F] sm:text-2xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                {w.title}
-              </h3>
-              <p className="mt-2 text-[13px] font-medium" style={{ fontFamily: "var(--font-mono)", color: "#D6FF3F" }}>
-                {w.metric}
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-white/55">{w.desc}</p>
-            </div>
-
-            {/* hover underline */}
-            <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] transition-all duration-500 group-hover:w-full" />
+            <Reveal delay={120}>
+              <a href="#contact" className="whitespace-nowrap text-sm text-white/60 underline underline-offset-4 transition hover:text-white">
+                View all case studies →
+              </a>
+            </Reveal>
           </div>
-        </Reveal>
-      ))}
-    </div>
 
-    {/* ── social-proof band ────────────────────────────── */}
-    <Reveal delay={120}>
-      <div className="mt-16 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]">
-        <div className="grid grid-cols-2 sm:grid-cols-4">
-          {workStats.map((s) => (
-            <div key={s.label} className="border-white/[0.06] px-6 py-9 text-center [&:not(:nth-child(2n))]:border-r sm:[&:not(:nth-child(2n))]:border-r-0 sm:[&:not(:first-child)]:border-l">
-              <p
-                className="bg-gradient-to-br from-white to-white/50 bg-clip-text text-3xl text-transparent sm:text-4xl"
-                style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}
-              >
-                {s.value}
-              </p>
-              <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
-                {s.label}
-              </p>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {work.map((w, i) => (
+              <Reveal key={w.title} delay={i * 90}>
+                <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/80 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-white/[0.15]">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden">
+                    <img src={w.img} alt={w.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#12141b] via-[#12141b]/10 to-transparent" />
+                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${w.gradient} opacity-0 mix-blend-soft-light transition-opacity duration-300 group-hover:opacity-50`} />
+                    <span className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)" }}>
+                      {w.tag}
+                    </span>
+                    <span className="absolute right-4 top-4 text-[11px] tabular-nums text-white/45" style={{ fontFamily: "var(--font-mono)" }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <div className="relative flex flex-1 flex-col p-6">
+                    <h3 className="text-xl transition-colors duration-300 group-hover:text-[#D6FF3F] sm:text-2xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
+                      {w.title}
+                    </h3>
+                    <p className="mt-2 text-[13px] font-medium" style={{ fontFamily: "var(--font-mono)", color: "#D6FF3F" }}>
+                      {w.metric}
+                    </p>
+                    <p className="mt-3 text-sm leading-relaxed text-white/55">{w.desc}</p>
+                  </div>
+                  <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] transition-all duration-500 group-hover:w-full" />
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal delay={120}>
+            <div className="mt-16 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/80 backdrop-blur-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4">
+                {workStats.map((s) => (
+                  <div key={s.label} className="border-white/[0.06] px-6 py-9 text-center [&:not(:nth-child(2n))]:border-r sm:[&:not(:nth-child(2n))]:border-r-0 sm:[&:not(:first-child)]:border-l">
+                    <p className="bg-gradient-to-br from-white to-white/50 bg-clip-text text-3xl text-transparent sm:text-4xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
+                      {s.value}
+                    </p>
+                    <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
+                      {s.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-white/[0.06] px-6 py-5 text-center">
+                <p className="text-[12px] uppercase tracking-[0.2em] text-white/45" style={{ fontFamily: "var(--font-mono)" }}>
+                  …and <span className="text-[#D6FF3F]">100+ more happy customers</span> — and counting.
+                </p>
+              </div>
             </div>
-          ))}
+          </Reveal>
         </div>
-        <div className="border-t border-white/[0.06] px-6 py-5 text-center">
-          <p className="text-[12px] uppercase tracking-[0.2em] text-white/45" style={{ fontFamily: "var(--font-mono)" }}>
-            …and <span className="text-[#D6FF3F]">100+ more happy customers</span> — and counting.
-          </p>
-        </div>
-      </div>
-    </Reveal>
-  </div>
-</section>
+      </section>
 
       {/* 6. CONTACT / CTA */}
-      <section id="contact" className="relative border-t border-white/[0.06] px-6 py-32 md:px-10 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.03]">
-          <div style={{ backgroundImage: "radial-gradient(circle, #D6FF3F 1px, transparent 1px)", backgroundSize: "40px 40px", width: "100%", height: "100%", animation: "float-drift 20s ease-in-out infinite" }} />
-        </div>
+      <section id="contact" className="relative z-10 border-t border-white/[0.06] px-6 py-32 md:px-10 overflow-hidden">
         <div className="relative mx-auto max-w-7xl">
           <Reveal>
             <p className="mb-6 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>
@@ -975,24 +1558,24 @@ export default function Home() {
               no one&apos;s seen yet.
             </h2>
           </Reveal>
-<Reveal delay={160}>
-  <div className="mt-12 flex flex-wrap items-center gap-6">
-    <a
-      href="mailto:veyracreativesdigitallab25@gmail.com"
-      className="rounded-full bg-[#D6FF3F] px-7 py-4 text-sm font-medium text-black transition-all duration-300 hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(214,255,63,0.3)]"
-    >
-      veyracreativesdigitallab25@gmail.com
-    </a>
-    <a
-      href="https://wa.me/918928246726?text=Hi%20Veyra!%20I%27d%20love%20to%20start%20a%20project."
-      target="_blank"
-      rel="noopener noreferrer"
-      className="rounded-full border border-white/20 px-7 py-4 text-sm text-white/85 transition-all duration-300 hover:border-[#25D366]/70 hover:text-white hover:scale-105"
-    >
-      Chat Right now!
-    </a>
-  </div>
-</Reveal>
+          <Reveal delay={160}>
+            <div className="mt-12 flex flex-wrap items-center gap-6">
+              <a
+                href="mailto:veyracreativesdigitallab25@gmail.com"
+                className="rounded-full bg-[#D6FF3F] px-7 py-4 text-sm font-medium text-black transition-all duration-300 hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(214,255,63,0.3)]"
+              >
+                veyracreativesdigitallab25@gmail.com
+              </a>
+              <a
+                href="https://wa.me/918928246726?text=Hi%20Veyra!%20I%27d%20love%20to%20start%20a%20project."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full border border-white/20 px-7 py-4 text-sm text-white/85 transition-all duration-300 hover:border-[#25D366]/70 hover:text-white hover:scale-105"
+              >
+                Chat Right now!
+              </a>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -1000,9 +1583,7 @@ export default function Home() {
       <SplineShowpiece />
 
       {/* 8. MEET THE FOUNDERS — intro */}
-      <section className="relative overflow-hidden border-t border-white/[0.06] px-6 py-28 md:px-10">
-        <div className="pointer-events-none absolute -top-24 left-1/4 h-96 w-96 rounded-full bg-[#D6FF3F]/[0.08] blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-24 right-1/4 h-96 w-96 rounded-full bg-[#8B7CF6]/[0.12] blur-[120px]" />
+      <section className="relative z-10 overflow-hidden border-t border-white/[0.06] px-6 py-28 md:px-10">
         <div className="relative mx-auto max-w-7xl">
           <Reveal>
             <p className="mb-5 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
@@ -1069,10 +1650,9 @@ export default function Home() {
         ]}
       />
 
-      {/* 11. MANIFESTO — now only shows hello.webp, rest removed */}
+      {/* 11. MANIFESTO */}
       <ManifestoSection />
-      <ScrollAgain />     
-      
+      <ScrollAgain />
 
       {/* keyframes */}
       <style jsx global>{`
@@ -1085,54 +1665,26 @@ export default function Home() {
           animation: veyra-shimmer-move 6s linear infinite;
         }
         @keyframes veyra-shimmer-move {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 300% 50%;
-          }
-        }
-        @keyframes float-drift {
-          0%,
-          100% {
-            transform: translate(0, 0);
-          }
-          50% {
-            transform: translate(14px, -10px);
-          }
+          0% { background-position: 0% 50%; }
+          100% { background-position: 300% 50%; }
         }
 
         .float-slow {
           animation: veyra-float 5s ease-in-out infinite;
         }
         @keyframes veyra-float {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
         }
 
         .scan-line {
           animation: veyra-scan 4.5s ease-in-out infinite;
         }
         @keyframes veyra-scan {
-          0% {
-            transform: translateY(-120%);
-            opacity: 0;
-          }
-          15% {
-            opacity: 1;
-          }
-          85% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(520%);
-            opacity: 0;
-          }
+          0% { transform: translateY(-120%); opacity: 0; }
+          15% { opacity: 1; }
+          85% { opacity: 1; }
+          100% { transform: translateY(520%); opacity: 0; }
         }
 
         .aura-blob {
@@ -1142,13 +1694,8 @@ export default function Home() {
           animation-delay: -4.5s;
         }
         @keyframes veyra-aura {
-          0%,
-          100% {
-            transform: translate(0, 0) scale(1);
-          }
-          50% {
-            transform: translate(12px, -10px) scale(1.08);
-          }
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(12px, -10px) scale(1.08); }
         }
 
         .grain {
@@ -1162,15 +1709,8 @@ export default function Home() {
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .veyra-shimmer {
-            animation: none;
-            background-position: 0% 50%;
-          }
-          .float-slow,
-          .scan-line,
-          .aura-blob {
-            animation: none;
-          }
+          .veyra-shimmer { animation: none; background-position: 0% 50%; }
+          .float-slow, .scan-line, .aura-blob { animation: none; }
         }
       `}</style>
     </main>
