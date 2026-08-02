@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Image from "next/image";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,21 +10,30 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#0B0D12]/70 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-10">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 md:px-10 md:py-7">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-1.5 select-none" onClick={closeMenu}>
-          <span
-            className="text-xl tracking-tight"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}
-          >
-            VEYRA
+        <a
+          href="/"
+          aria-label="Veyra — home"
+          className="group flex items-center select-none"
+          onClick={closeMenu}
+        >
+          {/* 2:1 frame crops the square's top/bottom white margin → horizontal logo plate */}
+          <span className="relative block h-9 aspect-[2/1] overflow-hidden sm:h-10">
+            <Image
+              src="/veyra_logo.png"
+              alt="Veyra"
+              fill
+              priority
+              sizes="96px"
+              className="object-cover object-center transition-opacity duration-300 group-hover:opacity-80"
+            />
           </span>
-          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#D6FF3F]" />
         </a>
 
         {/* Desktop Navigation */}
         <nav
-          className="hidden items-center gap-9 text-[13px] uppercase tracking-[0.12em] text-white/60 md:flex"
+          className="hidden items-center gap-10 text-sm uppercase tracking-[0.12em] text-white/60 md:flex"
           style={{ fontFamily: "var(--font-mono)" }}
         >
           <a href="/#work" className="transition hover:text-white">Work</a>
@@ -35,7 +44,7 @@ export default function Header() {
         {/* Desktop CTA Button */}
         <a
           href="/#contact"
-          className="hidden rounded-full border border-white/15 px-5 py-2 text-[13px] text-white/85 transition hover:border-[#D6FF3F]/60 hover:bg-[#D6FF3F] hover:text-black md:block"
+          className="hidden rounded-full border border-white/15 px-6 py-2.5 text-sm text-white/85 transition hover:border-[#D6FF3F]/60 hover:bg-[#D6FF3F] hover:text-black md:block"
           style={{ fontFamily: "var(--font-mono)" }}
         >
           Start a project
@@ -53,9 +62,8 @@ export default function Header() {
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className="w-6 h-6"
+            className="w-7 h-7"
           >
-            {/* Changes from hamburger to 'X' when open */}
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -75,7 +83,7 @@ export default function Header() {
           <a
             href="/#work"
             onClick={closeMenu}
-            className="text-[13px] uppercase tracking-[0.12em] text-white/60 hover:text-[#D6FF3F] transition"
+            className="text-sm uppercase tracking-[0.12em] text-white/60 hover:text-[#D6FF3F] transition"
             style={{ fontFamily: "var(--font-mono)" }}
           >
             Work
@@ -83,7 +91,7 @@ export default function Header() {
           <a
             href="/about"
             onClick={closeMenu}
-            className="text-[13px] uppercase tracking-[0.12em] text-white/60 hover:text-[#D6FF3F] transition"
+            className="text-sm uppercase tracking-[0.12em] text-white/60 hover:text-[#D6FF3F] transition"
             style={{ fontFamily: "var(--font-mono)" }}
           >
             About us
@@ -91,17 +99,17 @@ export default function Header() {
           <a
             href="/#contact"
             onClick={closeMenu}
-            className="text-[13px] uppercase tracking-[0.12em] text-white/60 hover:text-[#D6FF3F] transition"
+            className="text-sm uppercase tracking-[0.12em] text-white/60 hover:text-[#D6FF3F] transition"
             style={{ fontFamily: "var(--font-mono)" }}
           >
             Contact
           </a>
-          
+
           <div className="pt-4 border-t border-white/[0.06]">
             <a
               href="/#contact"
               onClick={closeMenu}
-              className="flex items-center justify-center w-full rounded-full border border-white/15 px-5 py-3.5 text-[13px] text-white/85 transition hover:border-[#D6FF3F]/60 hover:bg-[#D6FF3F] hover:text-black"
+              className="flex items-center justify-center w-full rounded-full border border-white/15 px-5 py-3.5 text-sm text-white/85 transition hover:border-[#D6FF3F]/60 hover:bg-[#D6FF3F] hover:text-black"
               style={{ fontFamily: "var(--font-mono)" }}
             >
               Start a project

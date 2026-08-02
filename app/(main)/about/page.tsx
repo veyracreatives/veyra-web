@@ -15,25 +15,23 @@ import { useGSAP } from "@gsap/react";
 gsap.registerPlugin(ScrollTrigger);
 
 // ───────────────────────────────────────────────────────────────
-// REFINED COLOR PALETTE — Warm Gold + Deep Charcoal + Soft Ivory
+// VEYRA BRAND PALETTE — Lime + Purple + Off-white on deep charcoal
+// (matches the home page so the site feels like one brand)
 // ───────────────────────────────────────────────────────────────
 
 const PALETTE = {
-  bg: "#0A0A0F",
-  bgDeep: "#060609",
-  gold: "#E8C547",
-  goldSoft: "#D4A843",
-  champagne: "#F2E6C9",
-  ivory: "#FAF8F2",
-  warmWhite: "#F5F0E8",
-  coolSlate: "#8B9DAF",
-  deepBlue: "#1A2332",
-  accent1: "#E8C547", // Gold
-  accent2: "#7BA3C9", // Soft Steel Blue
-  accent3: "#C9A87C", // Warm Sand
-  accent4: "#9B8EC9", // Muted Lavender
-  accent5: "#6BBFA8", // Sage Teal
-  accent6: "#E8C547", // Gold (bookend)
+  bg: "#0B0D12",
+  bgDeep: "#080A0E",
+  lime: "#D6FF3F",
+  purple: "#8B7CF6",
+  cyan: "#6EE7D8",
+  offwhite: "#F5F3EE",
+  accent1: "#D6FF3F", // Lime
+  accent2: "#8B7CF6", // Purple
+  accent3: "#6EE7D8", // Soft cyan
+  accent4: "#8B7CF6", // Purple
+  accent5: "#D6FF3F", // Lime
+  accent6: "#F5F3EE", // Off-white (bookend)
 };
 
 // ───────────────────────────────────────────────────────────────
@@ -58,7 +56,7 @@ interface StoryPanel {
 }
 
 // ───────────────────────────────────────────────────────────────
-// CONTENT
+// CONTENT — rewritten to be honest, specific, on-brand
 // ───────────────────────────────────────────────────────────────
 
 const storyPanels: StoryPanel[] = [
@@ -66,126 +64,126 @@ const storyPanels: StoryPanel[] = [
     phase: 0,
     side: "front",
     title: "The Lab",
-    subtitle: "Where marketing meets design",
+    subtitle: "Where it started",
     description:
-      "Veyra started as a two-person experiment: what happens when a performance marketer and a designer refuse to work in separate rooms?",
+      "Veyra began with two people and a shared frustration: marketing and design kept being treated like separate jobs. So we put them in the same room, gave them the same goals, and didn't let them leave until the work actually performed.",
     subPoints: [
-      "Performance marketing that actually performs",
-      "Design systems built for conversion, not just applause",
+      "Strategy and craft, owned by the same people",
+      "No hand-offs, no telephone game, no diluted ideas",
     ],
     stat: "40+",
-    statLabel: "Brands launched",
-    secondaryStat: "2×",
-    secondaryStatLabel: "Faster to market",
+    statLabel: "Brands scaled",
+    secondaryStat: "2",
+    secondaryStatLabel: "Founders, one lab",
     accent: PALETTE.accent1,
     position: "right",
-    lightColor: 0xe8c547,
+    lightColor: 0xd6ff3f,
     lightIntensity: 2.2,
   },
   {
     phase: 1,
     side: "right",
     title: "The Method",
-    subtitle: "Results over resumes",
+    subtitle: "How we work",
     description:
-      "We don't bill by the hour. We ship by the result. Every project is a bet on ourselves — if it doesn't convert, we fix it. For free.",
+      "We treat every project like an experiment. We form a hypothesis, build the smallest thing that can prove it, and let the numbers decide what's next — not opinions, not egos.",
     subPoints: [
-      "Fixed-price sprints. No timesheets.",
-      "If metrics drop post-launch, we iterate until they don't.",
+      "Fixed-scope sprints, so you always know the cost",
+      "If a launch underperforms, we keep iterating until it doesn't",
     ],
-    stat: "6",
-    statLabel: "Years running",
-    secondaryStat: "14d",
-    secondaryStatLabel: "Avg. sprint length",
+    stat: "14d",
+    statLabel: "Avg. sprint length",
+    secondaryStat: "0",
+    secondaryStatLabel: "Surprise invoices",
     accent: PALETTE.accent2,
     position: "left",
-    lightColor: 0x7ba3c9,
-    lightIntensity: 2.6,
+    lightColor: 0x8b7cf6,
+    lightIntensity: 2.4,
   },
   {
     phase: 1,
     side: "right",
     title: "The Process",
-    subtitle: "From chaos to shipped in three acts",
+    subtitle: "From brief to shipped",
     description:
-      "We don't do discovery decks that collect dust. We audit, we strategize, we build. Then we measure what actually moved the needle.",
+      "No hundred-page decks that gather dust. We audit what's real, decide what matters, build it, then measure what actually moved. You see progress every week — not a big reveal at the end.",
     subPoints: [
       "Audit → Strategy → Build → Measure",
-      "Weekly demos, not monthly status reports",
+      "Weekly demos instead of monthly status reports",
     ],
-    stat: "3",
-    statLabel: "Steps to launch",
+    stat: "4",
+    statLabel: "Steps, no dead ends",
     secondaryStat: "100%",
-    secondaryStatLabel: "Client visibility",
+    secondaryStatLabel: "Visibility, always",
     accent: PALETTE.accent3,
     position: "right",
-    lightColor: 0xc9a87c,
-    lightIntensity: 2.4,
+    lightColor: 0x6ee7d8,
+    lightIntensity: 2.3,
   },
   {
     phase: 2,
     side: "back",
     title: "The Team",
-    subtitle: "Deliberately small, dangerously capable",
+    subtitle: "Who shows up",
     description:
-      "Twelve people. No middle managers. No account executives who can't use Figma. Just builders who give a damn.",
+      "We stay small on purpose. A tight crew of senior builders — designers who write, developers who care about the story — with no layers between you and the people doing the work.",
     subPoints: [
-      "Senior-only. No juniors learning on your dime.",
-      "Designers who write copy. Developers who care about UX.",
+      "Senior hands on every project",
+      "The people you meet are the people who build",
     ],
-    stat: "12",
+    stat: "8",
     statLabel: "People in the lab",
     secondaryStat: "0",
-    secondaryStatLabel: "Middle managers",
+    secondaryStatLabel: "Layers in between",
     accent: PALETTE.accent4,
     position: "left",
-    lightColor: 0x9b8ec9,
-    lightIntensity: 2.5,
+    lightColor: 0x8b7cf6,
+    lightIntensity: 2.4,
   },
   {
     phase: 2,
     side: "back",
     title: "The Work",
-    subtitle: "Results that show up in revenue, not résumés",
+    subtitle: "What it's done",
     description:
-      "We've launched brands from zero to eight figures. Rebuilt checkout flows that added millions. Designed products people actually stick with.",
+      "We've taken brands from a name on a napkin to a checkout that hums, and shaped products people genuinely stick with. The metric we care about most is the one that shows up in your revenue.",
     subPoints: [
-      "E-commerce brands doing $10M+ annually",
-      "SaaS startups scaling seed to Series B",
+      "E-commerce and SaaS, from seed to scale",
+      "Rebuilds that quietly compound month over month",
     ],
-    stat: "$40M+",
-    statLabel: "Revenue influenced",
+    stat: "250+",
+    statLabel: "Projects shipped",
     secondaryStat: "6",
     secondaryStatLabel: "Industries served",
     accent: PALETTE.accent5,
     position: "right",
-    lightColor: 0x6bbfa8,
-    lightIntensity: 2.6,
+    lightColor: 0xd6ff3f,
+    lightIntensity: 2.4,
   },
   {
     phase: 3,
     side: "left",
     title: "The Promise",
-    subtitle: "We use the internet. So we build for it.",
+    subtitle: "What we owe you",
     description:
-      "A few years, dozens of launches, and one very overworked coffee machine later — we're still the studio that behaves like people who actually use the internet.",
+      "We use the internet every day, so we build for people who do too. A few years and a lot of launches later, we're still the studio that treats your product like it's ours — and answers like it.",
     subPoints: [
-      "We dog-food every tool we recommend.",
-      "Your analytics dashboard is our bedtime reading.",
+      "We use every tool we recommend",
+      "Your dashboard is our bedtime reading",
     ],
-    stat: "100%",
-    statLabel: "Client retention",
+    stat: "98%",
+    statLabel: "Would refer us",
     secondaryStat: "<2h",
-    secondaryStatLabel: "Avg. response time",
+    secondaryStatLabel: "Avg. reply time",
     accent: PALETTE.accent6,
     position: "left",
-    lightColor: 0xe8c547,
+    lightColor: 0xf5f3ee,
     lightIntensity: 2.0,
   },
 ];
 
 // ───────────────────────────────────────────────────────────────
-// REFINED SHADERS — Smoother, more elegant
+// SHADERS
 // ───────────────────────────────────────────────────────────────
 
 const iridescentVertexShader = `
@@ -196,7 +194,6 @@ const iridescentVertexShader = `
   uniform float uTime;
   uniform float uWaveIntensity;
 
-  // Simplex noise
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -248,13 +245,10 @@ const iridescentVertexShader = `
   void main() {
     vUv = uv;
     vec3 pos = position;
-    
-    // Gentler wave — more liquid, less jittery
     float noise1 = snoise(pos * 1.5 + uTime * 0.15);
     float noise2 = snoise(pos * 3.0 - uTime * 0.1) * 0.3;
     float combinedNoise = (noise1 + noise2) * uWaveIntensity;
     pos += normal * combinedNoise;
-    
     vec4 worldPosition = modelMatrix * vec4(pos, 1.0);
     vWorldPosition = worldPosition.xyz;
     vec4 mvPosition = viewMatrix * worldPosition;
@@ -284,62 +278,38 @@ const iridescentFragmentShader = `
   void main() {
     vec3 normal = normalize(vNormal);
     vec3 viewDir = normalize(vViewPosition);
-    
-    // Smooth fresnel
     float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), uFresnelPower);
     fresnel = smoothstep(0.0, 1.0, fresnel);
-    
-    // Elegant iridescence — slower, more subtle shift
     float hueShift = dot(vWorldPosition, viewDir) * 0.3 + uTime * 0.05;
-    hueShift = fract(hueShift); // Keep in 0-1 range for smooth cycling
-    
+    hueShift = fract(hueShift);
     vec3 iridColor;
     float t1 = smoothstep(0.0, 0.33, hueShift);
     float t2 = smoothstep(0.33, 0.66, hueShift);
     float t3 = smoothstep(0.66, 1.0, hueShift);
-    
     iridColor = mix(uIridescenceColor1, uIridescenceColor2, t1);
     iridColor = mix(iridColor, uIridescenceColor3, t2);
     iridColor = mix(iridColor, uIridescenceColor1, t3);
-    
-    // Base with subtle depth
     vec3 baseColor = uBaseColor * (1.0 - uMetalness * 0.2);
     vec3 color = baseColor;
-    
-    // Iridescence only at edges (fresnel-gated)
     color += iridColor * fresnel * uMetalness * 0.7;
-    
-    // Clearcoat highlight
     color += vec3(1.0, 0.98, 0.95) * fresnel * uClearcoat * 0.3;
-    
-    // Soft specular
     vec3 lightDir = normalize(vec3(3.0, 5.0, 8.0));
     vec3 halfDir = normalize(lightDir + viewDir);
     float specAngle = max(dot(normal, halfDir), 0.0);
     float specular = pow(specAngle, 80.0);
     color += vec3(1.0, 0.97, 0.9) * specular * 0.5 * uMetalness;
-    
-    // Secondary fill light
     vec3 fillDir = normalize(vec3(-4.0, -2.0, 6.0));
     vec3 fillHalf = normalize(fillDir + viewDir);
     float fillSpec = pow(max(dot(normal, fillHalf), 0.0), 40.0);
     color += uIridescenceColor2 * fillSpec * 0.15;
-    
-    // Ambient occlusion approximation
     float ao = 0.5 + 0.5 * normal.y;
     color *= mix(0.7, 1.0, ao);
-    
-    // Subtle rim glow
     color += uIridescenceColor1 * pow(fresnel, 4.0) * 0.15;
-    
-    // ACES tone mapping
     color = color * (2.51 * color + 0.03) / (color * (2.43 * color + 0.59) + 0.14);
-    
     gl_FragColor = vec4(color, 1.0);
   }
 `;
 
-// Refined post-processing: subtle grain, gentle vignette, minimal RGB shift
 const cinematicPostShader = {
   uniforms: {
     tDiffuse: { value: null },
@@ -349,7 +319,7 @@ const cinematicPostShader = {
     uVignetteSize: { value: 0.55 },
     uRgbShiftAmount: { value: 0.001 },
     uScrollProgress: { value: 0 },
-    uWarmth: { value: 0.02 },
+    uWarmth: { value: 0.005 },
   },
   vertexShader: `
     varying vec2 vUv;
@@ -375,31 +345,20 @@ const cinematicPostShader = {
 
     void main() {
       vec2 uv = vUv;
-      
-      // Very subtle RGB shift — only at edges
       float dist = length(uv - 0.5);
       float shift = uRgbShiftAmount * dist * dist;
       float r = texture2D(tDiffuse, uv + vec2(shift, 0.0)).r;
       float g = texture2D(tDiffuse, uv).g;
       float b = texture2D(tDiffuse, uv - vec2(shift, 0.0)).b;
       vec3 color = vec3(r, g, b);
-      
-      // Warm color grade
       color.r += uWarmth;
       color.b -= uWarmth * 0.5;
-      
-      // Film grain — very subtle
       float grain = (random(uv * 800.0 + uTime * 100.0) - 0.5) * uGrainIntensity;
       color += grain;
-      
-      // Smooth vignette
       float vignette = 1.0 - smoothstep(uVignetteSize, 1.4, dist * 2.0);
       vignette = pow(vignette, 1.2);
       color *= mix(1.0, vignette, uVignetteIntensity);
-      
-      // Slight lift in shadows for cinematic feel
       color = color * 0.95 + 0.02;
-      
       gl_FragColor = vec4(color, 1.0);
     }
   `,
@@ -440,23 +399,24 @@ export default function AboutPage() {
     postPass: ShaderPass | null;
   } | null>(null);
 
+  // Brand light colors (0–1 RGB): lime / purple / cyan
   const proxyRef = useRef({
     rotY: 0,
     rotX: 0,
     camX: 0,
     camY: 0,
     camZ: 24,
-    mainR: 0.91,
-    mainG: 0.77,
-    mainB: 0.28,
+    mainR: 0.839,
+    mainG: 1.0,
+    mainB: 0.247,
     mainInt: 2.2,
-    accentR: 0.48,
-    accentG: 0.64,
-    accentB: 0.79,
+    accentR: 0.545,
+    accentG: 0.486,
+    accentB: 0.965,
     accentInt: 0.8,
-    rimR: 0.6,
-    rimG: 0.55,
-    rimB: 0.79,
+    rimR: 0.431,
+    rimG: 0.906,
+    rimB: 0.847,
     rimInt: 0.4,
     caBoost: 0,
     textScale: 1,
@@ -475,9 +435,8 @@ export default function AboutPage() {
     const container = containerRef.current;
     if (!container) return;
 
-    // Scene
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0a0a0f, 0.012);
+    scene.fog = new THREE.FogExp2(0x0b0d12, 0.012);
 
     const camera = new THREE.PerspectiveCamera(
       40,
@@ -495,16 +454,14 @@ export default function AboutPage() {
     });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x0a0a0f, 1);
+    renderer.setClearColor(0x0b0d12, 1);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
 
-    // Post-processing — refined chain
     const composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
-    // Softer bloom
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(container.clientWidth, container.clientHeight),
       0.8,
@@ -516,34 +473,32 @@ export default function AboutPage() {
     bloomPass.radius = 0.8;
     composer.addPass(bloomPass);
 
-    // Cinematic post
     const postPass = new ShaderPass(cinematicPostShader);
     composer.addPass(postPass);
 
-    // Lighting — warm, cinematic
-    const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.4);
+    // Lighting — brand-tinted, cinematic
+    const ambientLight = new THREE.AmbientLight(0x12141b, 0.4);
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xe8c547, 2.2);
+    const mainLight = new THREE.DirectionalLight(0xd6ff3f, 2.2);
     mainLight.position.set(4, 6, 10);
     scene.add(mainLight);
 
-    const accentLight = new THREE.PointLight(0x7ba3c9, 0.8, 60);
+    const accentLight = new THREE.PointLight(0x8b7cf6, 0.8, 60);
     accentLight.position.set(-10, 4, 6);
     scene.add(accentLight);
 
-    const rimLight = new THREE.PointLight(0x9b8ec9, 0.4, 50);
+    const rimLight = new THREE.PointLight(0x6ee7d8, 0.4, 50);
     rimLight.position.set(8, -4, 8);
     scene.add(rimLight);
 
-    const backLight = new THREE.SpotLight(0xf2e6c9, 0.6);
+    const backLight = new THREE.SpotLight(0xf5f3ee, 0.6);
     backLight.position.set(0, 12, -12);
     backLight.lookAt(0, 0, 0);
     scene.add(backLight);
 
     const lights = { main: mainLight, accent: accentLight, rim: rimLight, back: backLight };
 
-    // Text
     const textSize = 2.0;
     const textDepth = 0.3;
     const bevelThickness = 0.04;
@@ -558,7 +513,7 @@ export default function AboutPage() {
       textCanvas.width = 1024;
       textCanvas.height = 256;
       const ctx = textCanvas.getContext("2d")!;
-      ctx.fillStyle = "#E8C547";
+      ctx.fillStyle = "#D6FF3F";
       ctx.font = "bold 180px Georgia, serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -601,10 +556,10 @@ export default function AboutPage() {
         const textUniforms = {
           uTime: { value: 0 },
           uWaveIntensity: { value: 0.015 },
-          uBaseColor: { value: new THREE.Color(0x1a1a2e) },
-          uIridescenceColor1: { value: new THREE.Color(0xe8c547) },
-          uIridescenceColor2: { value: new THREE.Color(0x7ba3c9) },
-          uIridescenceColor3: { value: new THREE.Color(0x9b8ec9) },
+          uBaseColor: { value: new THREE.Color(0x12141b) },
+          uIridescenceColor1: { value: new THREE.Color(0xd6ff3f) },
+          uIridescenceColor2: { value: new THREE.Color(0x8b7cf6) },
+          uIridescenceColor3: { value: new THREE.Color(0x6ee7d8) },
           uFresnelPower: { value: 2.8 },
           uMetalness: { value: 0.9 },
           uRoughness: { value: 0.2 },
@@ -623,7 +578,6 @@ export default function AboutPage() {
         textMesh.position.set(0, 0, 0);
         scene.add(textMesh);
 
-        // Soft glow shell
         const glowGeo = new TextGeometry("VEYRA", {
           font,
           size: textSize + 0.05,
@@ -640,7 +594,7 @@ export default function AboutPage() {
         glowGeo.translate(glowCenterOffset, 0, 0);
 
         const glowMaterial = new THREE.MeshBasicMaterial({
-          color: 0xe8c547,
+          color: 0xd6ff3f,
           transparent: true,
           opacity: 0.05,
           side: THREE.BackSide,
@@ -662,7 +616,7 @@ export default function AboutPage() {
       }
     );
 
-    // Particles — refined, fewer, more elegant
+    // Particles — brand palette
     const particleCount = 500;
     const particleGeometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
@@ -684,23 +638,22 @@ export default function AboutPage() {
       velocities[i * 3 + 1] = 0;
       velocities[i * 3 + 2] = 0;
 
-      // Warm palette particles
       const colorChoice = seededRandom(s + 3);
       if (colorChoice < 0.5) {
-        // Gold
-        colors[i * 3] = 0.91;
-        colors[i * 3 + 1] = 0.77;
-        colors[i * 3 + 2] = 0.28;
+        // Lime
+        colors[i * 3] = 0.84;
+        colors[i * 3 + 1] = 1.0;
+        colors[i * 3 + 2] = 0.25;
       } else if (colorChoice < 0.75) {
-        // Soft blue
-        colors[i * 3] = 0.48;
-        colors[i * 3 + 1] = 0.64;
-        colors[i * 3 + 2] = 0.79;
+        // Purple
+        colors[i * 3] = 0.545;
+        colors[i * 3 + 1] = 0.486;
+        colors[i * 3 + 2] = 0.965;
       } else {
-        // Warm ivory
-        colors[i * 3] = 0.95;
-        colors[i * 3 + 1] = 0.9;
-        colors[i * 3 + 2] = 0.79;
+        // Off-white
+        colors[i * 3] = 0.96;
+        colors[i * 3 + 1] = 0.95;
+        colors[i * 3 + 2] = 0.93;
       }
       sizes[i] = 0.02 + seededRandom(s + 4) * 0.04;
     }
@@ -722,10 +675,9 @@ export default function AboutPage() {
     const particles = new THREE.Points(particleGeometry, particleMaterial);
     scene.add(particles);
 
-    // Ambient glow sphere — very subtle
     const glowSphereGeo = new THREE.SphereGeometry(14, 32, 32);
     const glowSphereMat = new THREE.MeshBasicMaterial({
-      color: 0xe8c547,
+      color: 0x8b7cf6,
       transparent: true,
       opacity: 0.015,
       side: THREE.BackSide,
@@ -733,7 +685,6 @@ export default function AboutPage() {
     const glowSphere = new THREE.Mesh(glowSphereGeo, glowSphereMat);
     scene.add(glowSphere);
 
-    // Store refs
     sceneRef.current = {
       scene,
       camera,
@@ -747,15 +698,14 @@ export default function AboutPage() {
       postPass,
     };
 
-
-     // ─── ANIMATION LOOP ─────────────────────────────
+    // ─── ANIMATION LOOP ─────────────────────────────
     let startTime = performance.now();
     let frameCount = 0;
 
     const animate = () => {
       requestAnimationFrame(animate);
       const currentTime = performance.now();
-      const elapsed = (currentTime - startTime) / 1000; // Convert milliseconds to seconds
+      const elapsed = (currentTime - startTime) / 1000;
       frameCount++;
 
       const {
@@ -770,24 +720,20 @@ export default function AboutPage() {
 
       const proxy = proxyRef.current;
 
-      // Smooth mouse
       mouseRef.current.x += (targetMouseRef.current.x - mouseRef.current.x) * 0.03;
       mouseRef.current.y += (targetMouseRef.current.y - mouseRef.current.y) * 0.03;
 
       if (tMesh) {
         const uniforms = (tMesh.material as THREE.ShaderMaterial).uniforms;
 
-        // Ultra-smooth rotation with lower lerp factor
         tMesh.rotation.y += (proxy.rotY - tMesh.rotation.y) * 0.035;
         tMesh.rotation.x += (proxy.rotX - tMesh.rotation.x) * 0.03;
 
-        // Gentle floating
         const floatY = Math.sin(elapsed * 0.3) * 0.15;
         const floatX = Math.cos(elapsed * 0.2) * 0.05;
         tMesh.position.y += (floatY - tMesh.position.y) * 0.02;
         tMesh.position.x += (floatX - tMesh.position.x) * 0.02;
 
-        // Subtle idle breathing
         const isIdle = scrollVelocityRef.current < 0.005;
         if (isIdle) {
           tMesh.rotation.z = Math.sin(elapsed * 0.25) * 0.004;
@@ -795,15 +741,12 @@ export default function AboutPage() {
           tMesh.rotation.z *= 0.95;
         }
 
-        // Scale breathing
         const targetScale = proxy.textScale + Math.sin(elapsed * 0.4) * 0.005;
         tMesh.scale.setScalar(tMesh.scale.x + (targetScale - tMesh.scale.x) * 0.02);
 
-        // Shader uniforms
         uniforms.uTime.value = elapsed;
         uniforms.uScrollVelocity.value += (scrollVelocityRef.current - uniforms.uScrollVelocity.value) * 0.05;
 
-        // Sync glow mesh
         if (gMesh) {
           gMesh.rotation.copy(tMesh.rotation);
           gMesh.position.copy(tMesh.position);
@@ -811,13 +754,11 @@ export default function AboutPage() {
         }
       }
 
-      // Camera — very smooth
       cam.position.x += (proxy.camX + mouseRef.current.x * 0.3 - cam.position.x) * 0.025;
       cam.position.y += (proxy.camY + mouseRef.current.y * 0.2 - cam.position.y) * 0.025;
       cam.position.z += (proxy.camZ - cam.position.z) * 0.025;
       cam.lookAt(0, 0, 0);
 
-      // Light transitions — smooth
       const lerpSpeed = 0.025;
       l.main.color.r += (proxy.mainR - l.main.color.r) * lerpSpeed;
       l.main.color.g += (proxy.mainG - l.main.color.g) * lerpSpeed;
@@ -834,7 +775,6 @@ export default function AboutPage() {
       l.rim.color.b += (proxy.rimB - l.rim.color.b) * lerpSpeed;
       l.rim.intensity += (proxy.rimInt - l.rim.intensity) * lerpSpeed;
 
-      // Particles — gentle drift
       if (ptcl) {
         const posArray = ptcl.geometry.attributes.position.array as Float32Array;
         const timeScale = elapsed * 0.08;
@@ -845,7 +785,6 @@ export default function AboutPage() {
           const py = posArray[idx + 1];
           const pz = posArray[idx + 2];
 
-          // Gentle curl noise
           const curlX = Math.sin(py * 0.1 + timeScale) * Math.cos(pz * 0.08);
           const curlY = Math.cos(pz * 0.1 + timeScale) * Math.sin(px * 0.08);
           const curlZ = Math.sin(px * 0.1 + timeScale) * Math.cos(py * 0.08);
@@ -854,7 +793,6 @@ export default function AboutPage() {
           velocities[idx + 1] += curlY * 0.003;
           velocities[idx + 2] += curlZ * 0.002;
 
-          // Mouse influence — very subtle
           const mx = mouseRef.current.x * 12;
           const my = -mouseRef.current.y * 12;
           const distToMouse = Math.sqrt((px - mx) ** 2 + (py - my) ** 2);
@@ -864,7 +802,6 @@ export default function AboutPage() {
             velocities[idx + 1] += (my - py) * force;
           }
 
-          // Damping
           velocities[idx] *= 0.97;
           velocities[idx + 1] *= 0.97;
           velocities[idx + 2] *= 0.97;
@@ -873,7 +810,6 @@ export default function AboutPage() {
           posArray[idx + 1] += velocities[idx + 1];
           posArray[idx + 2] += velocities[idx + 2];
 
-          // Soft bounds
           if (Math.abs(posArray[idx]) > 20) posArray[idx] *= -0.8;
           if (Math.abs(posArray[idx + 1]) > 20) posArray[idx + 1] *= -0.8;
           if (Math.abs(posArray[idx + 2]) > 10) posArray[idx + 2] *= -0.8;
@@ -883,13 +819,11 @@ export default function AboutPage() {
         ptcl.rotation.y = elapsed * 0.01;
       }
 
-      // Glow sphere breathing
       if (gSphere) {
         gSphere.scale.setScalar(1 + Math.sin(elapsed * 0.4) * 0.03);
         gSphere.rotation.y = elapsed * 0.05;
       }
 
-      // Post-processing
       if (pp) {
         pp.uniforms.uTime.value = elapsed;
         pp.uniforms.uScrollProgress.value += (smoothScrollProgressRef.current - pp.uniforms.uScrollProgress.value) * 0.03;
@@ -899,14 +833,12 @@ export default function AboutPage() {
     };
     animate();
 
-    // Mouse
     const handleMouseMove = (e: MouseEvent) => {
       targetMouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       targetMouseRef.current.y = (e.clientY / window.innerHeight) * 2 - 1;
     };
     window.addEventListener("mousemove", handleMouseMove);
 
-    // Resize
     const handleResize = () => {
       if (!container) return;
       const width = container.clientWidth;
@@ -927,7 +859,7 @@ export default function AboutPage() {
     };
   }, [isClient]);
 
-  // ─── SCROLL TRACKING — Smoother ──────────────────
+  // ─── SCROLL TRACKING ──────────────────
   useEffect(() => {
     if (!isClient) return;
     let rafId: number;
@@ -937,8 +869,8 @@ export default function AboutPage() {
     const track = () => {
       const currentY = window.scrollY;
       const delta = Math.abs(currentY - lastY);
-      vel += (delta * 0.008 - vel) * 0.06; // Much smoother velocity
-      scrollVelocityRef.current = Math.min(vel, 1.0); // Clamp
+      vel += (delta * 0.008 - vel) * 0.06;
+      scrollVelocityRef.current = Math.min(vel, 1.0);
       lastY = currentY;
 
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -952,24 +884,37 @@ export default function AboutPage() {
     return () => cancelAnimationFrame(rafId);
   }, [isClient]);
 
-  // ─── GSAP SCROLL ANIMATIONS — Smoother choreography ───
+  // ─── GSAP SCROLL ANIMATIONS ───
   useGSAP(
     () => {
       if (!sceneRef.current?.textMesh || !scrollContainerRef.current) return;
 
       const proxy = proxyRef.current;
 
-      // Master timeline — smooth, cinematic pacing
+      // Intro hero fades out as you start scrolling
+      gsap.to(".about-intro", {
+        opacity: 0,
+        y: -60,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".about-intro",
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+
+      // Master timeline — brand light choreography (lime → purple → cyan → lime)
       const masterTl = gsap.timeline({
         scrollTrigger: {
           trigger: scrollContainerRef.current,
           start: "top top",
           end: "bottom bottom",
-          scrub: 1.2, // Higher scrub = smoother
+          scrub: 1.2,
         },
       });
 
-      // Phase 0: Front — gentle intro
+      // Phase 0: Front — gentle intro (stays lime)
       masterTl.to(proxy, {
         rotY: Math.PI * 0.04,
         rotX: 0.02,
@@ -979,24 +924,24 @@ export default function AboutPage() {
         ease: "none",
       }, 0);
 
-      // Transition → Right (smooth arc)
+      // Transition → Right (purple key, cyan accent)
       masterTl.to(proxy, {
         rotY: -Math.PI * 0.5,
         rotX: -0.01,
         camX: -1.5,
         camY: -0.2,
         camZ: 20,
-        mainR: 0.48,
-        mainG: 0.64,
-        mainB: 0.79,
+        mainR: 0.545,
+        mainG: 0.486,
+        mainB: 0.965,
         mainInt: 1.8,
-        accentR: 0.48,
-        accentG: 0.64,
-        accentB: 0.79,
+        accentR: 0.431,
+        accentG: 0.906,
+        accentB: 0.847,
         accentInt: 2.5,
-        rimR: 0.6,
-        rimG: 0.55,
-        rimB: 0.79,
+        rimR: 0.545,
+        rimG: 0.486,
+        rimB: 0.965,
         rimInt: 0.6,
         ease: "power1.inOut",
       }, 0.14);
@@ -1008,24 +953,24 @@ export default function AboutPage() {
         ease: "none",
       }, 0.28);
 
-      // Transition → Back
+      // Transition → Back (cyan rim, off-white key)
       masterTl.to(proxy, {
         rotY: -Math.PI * 1.0,
         rotX: 0.01,
         camX: 1.0,
         camY: 0.2,
         camZ: 21,
-        accentR: 0.6,
-        accentG: 0.55,
-        accentB: 0.79,
+        accentR: 0.545,
+        accentG: 0.486,
+        accentB: 0.965,
         accentInt: 1.5,
-        rimR: 0.6,
-        rimG: 0.55,
-        rimB: 0.79,
+        rimR: 0.431,
+        rimG: 0.906,
+        rimB: 0.847,
         rimInt: 2.0,
-        mainR: 0.79,
-        mainG: 0.66,
-        mainB: 0.49,
+        mainR: 0.961,
+        mainG: 0.953,
+        mainB: 0.933,
         mainInt: 1.5,
         ease: "power1.inOut",
       }, 0.42);
@@ -1037,7 +982,7 @@ export default function AboutPage() {
         ease: "none",
       }, 0.56);
 
-      // Transition → Left
+      // Transition → Left (back to lime)
       masterTl.to(proxy, {
         rotY: -Math.PI * 1.5,
         rotX: 0,
@@ -1048,13 +993,13 @@ export default function AboutPage() {
         rimG: 0.4,
         rimB: 0.4,
         rimInt: 0.3,
-        mainR: 0.91,
-        mainG: 0.77,
-        mainB: 0.28,
+        mainR: 0.839,
+        mainG: 1.0,
+        mainB: 0.247,
         mainInt: 2.2,
-        accentR: 0.91,
-        accentG: 0.77,
-        accentB: 0.28,
+        accentR: 0.839,
+        accentG: 1.0,
+        accentB: 0.247,
         accentInt: 1.0,
         ease: "power1.inOut",
       }, 0.72);
@@ -1075,7 +1020,6 @@ export default function AboutPage() {
         const wrapper = section.querySelector(".panel-content-wrapper");
         const isLeft = section.dataset.position === "left";
 
-        // Gentle parallax
         if (wrapper) {
           gsap.fromTo(
             wrapper,
@@ -1093,7 +1037,6 @@ export default function AboutPage() {
           );
         }
 
-        // Panel entrance — smooth slide + fade
         if (panel) {
           gsap.fromTo(
             panel,
@@ -1117,7 +1060,6 @@ export default function AboutPage() {
           );
         }
 
-        // Staggered content reveal
         const content = section.querySelector(".panel-content");
         if (content) {
           gsap.fromTo(
@@ -1138,7 +1080,6 @@ export default function AboutPage() {
           );
         }
 
-        // Stat counters
         const statEls = section.querySelectorAll<HTMLElement>(".panel-stat");
         statEls.forEach((stat) => {
           const numEl = stat.querySelector<HTMLElement>(".stat-number");
@@ -1192,11 +1133,11 @@ export default function AboutPage() {
   // ─── SSR FALLBACK ────────────────────────────────
   if (!isClient) {
     return (
-      <main className="relative min-h-screen bg-[#0A0A0F]">
+      <main className="relative min-h-screen bg-[#0B0D12]">
         <div className="flex h-screen items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border border-[#E8C547]/30 border-t-[#E8C547]" />
-            <p className="text-xs uppercase tracking-[0.25em] text-white/30">
+            <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border border-[#D6FF3F]/30 border-t-[#D6FF3F]" />
+            <p className="text-xs uppercase tracking-[0.25em] text-white/30" style={{ fontFamily: "var(--font-mono)" }}>
               Loading Experience
             </p>
           </div>
@@ -1206,15 +1147,15 @@ export default function AboutPage() {
   }
 
   return (
-    <main className="relative bg-[#0A0A0F]">
+    <main className="relative bg-[#0B0D12]">
       {/* Fixed 3D Canvas */}
       <div ref={containerRef} className="fixed inset-0 z-0 h-screen w-full">
         <canvas ref={canvasRef} className="h-full w-full" />
         {!isLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#0A0A0F]">
+          <div className="absolute inset-0 flex items-center justify-center bg-[#0B0D12]">
             <div className="text-center">
-              <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border border-[#E8C547]/30 border-t-[#E8C547]" />
-              <p className="text-xs uppercase tracking-[0.25em] text-white/30">
+              <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border border-[#D6FF3F]/30 border-t-[#D6FF3F]" />
+              <p className="text-xs uppercase tracking-[0.25em] text-white/30" style={{ fontFamily: "var(--font-mono)" }}>
                 Loading Experience
               </p>
             </div>
@@ -1224,8 +1165,43 @@ export default function AboutPage() {
 
       {/* Scroll Content */}
       <div ref={scrollContainerRef} className="relative z-10">
-        {/* Initial spacer */}
-        <div className="h-screen" />
+        {/* ── INTRO / SCROLL HINT ── */}
+        <section className="about-intro relative flex h-screen flex-col items-center justify-center px-6 text-center">
+          <div className="max-w-2xl">
+            <p
+              className="mb-6 text-[11px] uppercase tracking-[0.35em] text-[#D6FF3F]/80"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              About Veyra
+            </p>
+            <h1
+              className="text-5xl leading-[1.05] tracking-tight text-[#F5F3EE] sm:text-6xl lg:text-7xl"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+            >
+              The story behind{" "}
+              <span className="bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] bg-clip-text text-transparent">
+                the lab
+              </span>
+            </h1>
+            <p className="mx-auto mt-7 max-w-md text-base leading-relaxed text-white/45">
+              Two founders, one room, and a stubborn belief that great brands are
+              grown — not assembled. Here&apos;s who we are and how we work.
+            </p>
+          </div>
+
+          {/* Scroll cue */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+            <div
+              className="flex flex-col items-center gap-3 text-[11px] uppercase tracking-[0.25em] text-white/40"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Scroll for more
+              <span className="scroll-cue relative h-10 w-px overflow-hidden bg-white/10">
+                <span className="scroll-cue-dot absolute left-0 h-4 w-px bg-[#D6FF3F]" />
+              </span>
+            </div>
+          </div>
+        </section>
 
         {/* Story Panels */}
         {storyPanels.map((panel, index) => {
@@ -1257,26 +1233,47 @@ export default function AboutPage() {
                   }`}
                 >
                   <div className="panel-content">
-                    {/* Accent line */}
+                    {/* Index + accent line */}
                     <div
-                      className="mb-8 h-px w-12 transition-all duration-700"
-                      style={{
-                        background: `linear-gradient(90deg, ${panel.accent}, transparent)`,
-                        marginLeft: panel.position === "right" ? "auto" : "0",
-                        marginRight: panel.position === "left" ? "auto" : "0",
-                      }}
-                    />
+                      className={`mb-8 flex items-center gap-3 ${
+                        panel.position === "right" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {panel.position === "left" && (
+                        <span
+                          className="text-[11px] tabular-nums"
+                          style={{ color: panel.accent, opacity: 0.7, fontFamily: "var(--font-mono)" }}
+                        >
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                      )}
+                      <div
+                        className="h-px w-12 transition-all duration-700"
+                        style={{ background: `linear-gradient(90deg, ${panel.accent}, transparent)` }}
+                      />
+                      {panel.position === "right" && (
+                        <span
+                          className="text-[11px] tabular-nums"
+                          style={{ color: panel.accent, opacity: 0.7, fontFamily: "var(--font-mono)" }}
+                        >
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Subtitle */}
                     <p
                       className="mb-4 text-[10px] font-medium uppercase tracking-[0.35em]"
-                      style={{ color: panel.accent, opacity: 0.7 }}
+                      style={{ color: panel.accent, opacity: 0.7, fontFamily: "var(--font-mono)" }}
                     >
                       {panel.subtitle}
                     </p>
 
                     {/* Title */}
-                    <h2 className="mb-6 text-4xl font-light leading-[1.1] tracking-tight text-[#FAF8F2] sm:text-5xl lg:text-6xl">
+                    <h2
+                      className="mb-6 text-4xl leading-[1.1] tracking-tight text-[#F5F3EE] sm:text-5xl lg:text-6xl"
+                      style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+                    >
                       {panel.title}
                     </h2>
 
@@ -1285,28 +1282,37 @@ export default function AboutPage() {
                       {panel.description}
                     </p>
 
-                    {/* Sub points */}
-                    {panel.subPoints && panel.subPoints.length > 0 && (
-                      <ul
-                        className={`mb-10 space-y-3 ${
-                          panel.position === "right" ? "ml-auto" : ""
-                        }`}
-                        style={{ maxWidth: "340px" }}
-                      >
-                        {panel.subPoints.map((point, i) => (
-                          <li
-                            key={i}
-                            className="flex items-start gap-3 text-sm leading-relaxed text-white/35"
-                          >
-                            <span
-                              className="mt-2 h-px w-3 shrink-0"
-                              style={{ backgroundColor: panel.accent, opacity: 0.5 }}
-                            />
-                            <span>{point}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+{/* Sub points */}
+{panel.subPoints && panel.subPoints.length > 0 && (
+  <ul
+    className={`mb-10 space-y-3.5 ${
+      panel.position === "right" ? "ml-auto" : ""
+    }`}
+    style={{ maxWidth: "340px" }}
+  >
+    {panel.subPoints.map((point, i) => (
+      <li
+        key={i}
+        className={`flex items-start gap-3 text-sm leading-relaxed text-white/40 ${
+          panel.position === "right" ? "flex-row-reverse text-right" : "text-left"
+        }`}
+      >
+        {/* marker — sits on the outer edge, points toward the text */}
+        <span
+          aria-hidden="true"
+          className="mt-[0.62em] h-px w-4 shrink-0"
+          style={{
+            background: `linear-gradient(${
+              panel.position === "right" ? "270deg" : "90deg"
+            }, ${panel.accent}, transparent)`,
+            opacity: 0.7,
+          }}
+        />
+        <span className="flex-1">{point}</span>
+      </li>
+    ))}
+  </ul>
+)}
                   </div>
 
                   {/* Stats */}
@@ -1315,19 +1321,20 @@ export default function AboutPage() {
                       panel.position === "right" ? "justify-end" : ""
                     }`}
                   >
-                    <div
-                      className="panel-stat flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-6 py-4 backdrop-blur-md"
-                    >
+                    <div className="panel-stat flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-6 py-4 backdrop-blur-md">
                       <span
-                        className="stat-number text-3xl font-light tracking-tight sm:text-4xl"
-                        style={{ color: panel.accent }}
+                        className="stat-number text-3xl tracking-tight sm:text-4xl"
+                        style={{ color: panel.accent, fontFamily: "var(--font-display)", fontWeight: 600 }}
                         data-prefix={prefix}
                         data-value={numericValue}
                         data-suffix={suffix}
                       >
                         {panel.stat}
                       </span>
-                      <span className="text-[10px] uppercase tracking-[0.15em] text-white/30">
+                      <span
+                        className="text-[10px] uppercase tracking-[0.15em] text-white/30"
+                        style={{ fontFamily: "var(--font-mono)" }}
+                      >
                         {panel.statLabel}
                       </span>
                     </div>
@@ -1335,15 +1342,18 @@ export default function AboutPage() {
                     {panel.secondaryStat && (
                       <div className="panel-stat flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.015] px-5 py-3.5 backdrop-blur-md">
                         <span
-                          className="stat-number text-xl font-light sm:text-2xl"
-                          style={{ color: panel.accent, opacity: 0.8 }}
+                          className="stat-number text-xl sm:text-2xl"
+                          style={{ color: panel.accent, opacity: 0.8, fontFamily: "var(--font-display)", fontWeight: 600 }}
                           data-prefix={secPrefix}
                           data-value={secNumericValue}
                           data-suffix={secSuffix}
                         >
                           {panel.secondaryStat}
                         </span>
-                        <span className="text-[9px] uppercase tracking-[0.12em] text-white/25">
+                        <span
+                          className="text-[9px] uppercase tracking-[0.12em] text-white/25"
+                          style={{ fontFamily: "var(--font-mono)" }}
+                        >
                           {panel.secondaryStatLabel}
                         </span>
                       </div>
@@ -1358,6 +1368,21 @@ export default function AboutPage() {
         {/* End spacer */}
         <div className="h-[40vh]" />
       </div>
+
+      <style jsx global>{`
+        .scroll-cue-dot {
+          animation: veyra-scroll-cue 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        }
+        @keyframes veyra-scroll-cue {
+          0% { top: -40%; opacity: 0; }
+          30% { opacity: 1; }
+          70% { opacity: 1; }
+          100% { top: 110%; opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .scroll-cue-dot { animation: none; top: 0; opacity: 1; }
+        }
+      `}</style>
     </main>
   );
 }

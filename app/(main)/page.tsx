@@ -6,7 +6,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import ScrollParallax from "@/app/components/ScrollParallax";
 import RevealBlock from "@/app/components/Reveal";
-import ScrollAgain from "@/app/components/ScrollAgain";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -100,8 +99,6 @@ function ScrollProgress() {
 
 /* ═══════════════════════════════════════════════════════
    AMBIENT TYPE FIELD — kinetic typography background
-   2-layer parallax · blueprint grid · scan-line reveal
-   glyph accents · corner telemetry · velocity connectors
    ═══════════════════════════════════════════════════════ */
 
 type FieldLayer = "back" | "front";
@@ -111,21 +108,21 @@ interface GlyphAccent {
   size: number;
   pos: React.CSSProperties;
   orbitRadius: number;
-  orbitSpeed: number; // radians / ms
+  orbitSpeed: number;
   phase: number;
 }
 
 interface WordConfig {
   text: string;
   color: string;
-  fontSize: number; // vw
-  strokeWidth: number; // px
+  fontSize: number;
+  strokeWidth: number;
   baseOpacity: number;
   layer: FieldLayer;
   axis: "horizontal" | "diagonal" | "vertical";
   speed: number;
   angle: number;
-  startX: number; // 0–1 viewport fraction
+  startX: number;
   startY: number;
   pulseFreq: number;
   pulsePhase: number;
@@ -155,11 +152,10 @@ interface WordState {
 const LIME = "#D6FF3F";
 const PURPLE = "#8B7CF6";
 const OFFWHITE = "#F5F3EE";
-const SCAN_PERIOD = 7000; // ms per sweep
+const SCAN_PERIOD = 7000;
 const LINE_POOL = 8;
 
 const FIELD_WORDS: WordConfig[] = [
-  /* ── FRONT LAYER — sharp, faster ── */
   {
     text: "STRATEGY", color: LIME, fontSize: 21, strokeWidth: 1.5, baseOpacity: 0.12,
     layer: "front", axis: "horizontal", speed: 0.42, angle: 0, startX: 0.06, startY: 0.1,
@@ -189,7 +185,6 @@ const FIELD_WORDS: WordConfig[] = [
       { char: "■", size: 9, pos: { left: -24, top: "-4%" }, orbitRadius: 6, orbitSpeed: 0.0011, phase: 5.6 },
     ],
   },
-  /* ── BACK LAYER — larger, blurred, slower ── */
   {
     text: "SCALE", color: PURPLE, fontSize: 32, strokeWidth: 2, baseOpacity: 0.055,
     layer: "back", axis: "horizontal", speed: 0.22, angle: 0, startX: 0.48, startY: 0.2,
@@ -222,6 +217,7 @@ const FIELD_WORDS: WordConfig[] = [
 
 const pad4 = (n: number) => String(Math.abs(Math.round(n)) % 10000).padStart(4, "0");
 const pad3 = (n: number) => String(Math.abs(Math.round(n)) % 1000).padStart(3, "0");
+const padFrame = (n: number) => String(n).padStart(3, "0");
 
 function AmbientTypeField() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -255,7 +251,6 @@ function AmbientTypeField() {
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     reducedMotionRef.current = motionQuery.matches;
 
-    /* ── runtime configs + states ── */
     configsRef.current = FIELD_WORDS.map((w) => ({ ...w, glyphs: w.glyphs.map((g) => ({ ...g })) }));
     const dims = { w: window.innerWidth, h: window.innerHeight };
     dimsRef.current = dims;
@@ -275,7 +270,6 @@ function AmbientTypeField() {
     }));
     wordDimsRef.current = configsRef.current.map(() => ({ w: 0, h: 0 }));
 
-    /* ── measure (cached — no per-frame layout reads) ── */
     const measure = () => {
       dimsRef.current = { w: window.innerWidth, h: window.innerHeight };
       configsRef.current.forEach((_, i) => {
@@ -291,7 +285,6 @@ function AmbientTypeField() {
       document.fonts.ready.then(() => { if (!fontsCancelled) measure(); });
     }
 
-    /* ── listeners ── */
     const onMouseMove = (e: MouseEvent) => {
       mouseRef.current.x = e.clientX / window.innerWidth;
       mouseRef.current.y = e.clientY / window.innerHeight;
@@ -314,7 +307,6 @@ function AmbientTypeField() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    /* ── static frame for reduced motion ── */
     const renderStatic = () => {
       const configs = configsRef.current;
       const states = statesRef.current;
@@ -339,16 +331,12 @@ function AmbientTypeField() {
       if (scanPctRef.current) scanPctRef.current.textContent = "000";
     };
 
-    /* ── main loop ── */
     let lastFrameTime = performance.now();
-
     const loop = (timestamp: number) => {
       if (reducedMotionRef.current) return;
-
       const dt = Math.min(timestamp - lastFrameTime, 50);
       lastFrameTime = timestamp;
       const dtF = dt / 16.667;
-
       const d = dimsRef.current;
       const configs = configsRef.current;
       const states = statesRef.current;
@@ -358,11 +346,9 @@ function AmbientTypeField() {
       const speedMult = 1 + Math.min(scroll.velocity * 12, 3);
       const glitchMult = 1 + Math.min(scroll.velocity * 8, 2);
       scroll.velocity *= 0.95;
-
       const docH = document.documentElement.scrollHeight - window.innerHeight;
       const scrollProg = docH > 0 ? scroll.y / docH : 0;
 
-      /* ── layer parallax (cursor + scroll progress) ── */
       const ll = layerLerpRef.current;
       const tmx = mouse.active ? (mouse.x - 0.5) * 2 : 0;
       const tmy = mouse.active ? (mouse.y - 0.5) * 2 : 0;
@@ -375,19 +361,15 @@ function AmbientTypeField() {
       off.frontX = ll.x * -26;
       off.frontY = ll.y * -16 + scrollProg * -90;
 
-      if (backLayerRef.current)
-        backLayerRef.current.style.transform = `translate3d(${off.backX}px, ${off.backY}px, 0)`;
-      if (frontLayerRef.current)
-        frontLayerRef.current.style.transform = `translate3d(${off.frontX}px, ${off.frontY}px, 0)`;
+      if (backLayerRef.current) backLayerRef.current.style.transform = `translate3d(${off.backX}px, ${off.backY}px, 0)`;
+      if (frontLayerRef.current) frontLayerRef.current.style.transform = `translate3d(${off.frontX}px, ${off.frontY}px, 0)`;
 
-      /* ── blueprint grid shift ── */
       if (gridRef.current) {
         const gy = -((scroll.y * 0.06) % 120);
         const gx = ll.x * -6 - ((scroll.y * 0.012) % 120);
         gridRef.current.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
       }
 
-      /* ── scan line sweep ── */
       const scanProg = (timestamp % SCAN_PERIOD) / SCAN_PERIOD;
       const scanY = scanProg * (d.h + 260) - 130;
       if (scanRef.current) scanRef.current.style.transform = `translate3d(0, ${scanY}px, 0)`;
@@ -397,9 +379,7 @@ function AmbientTypeField() {
         if (scanPctRef.current) scanPctRef.current.textContent = pad3(pct);
       }
 
-      /* ── words ── */
       const centers: { x: number; y: number }[] = [];
-
       for (let i = 0; i < configs.length; i++) {
         const cfg = configs[i];
         const s = states[i];
@@ -414,7 +394,6 @@ function AmbientTypeField() {
         const layerOffY = cfg.layer === "back" ? off.backY : off.frontY;
         const margin = wordW * 0.6;
 
-        /* drift */
         const vx = Math.cos(cfg.angle) * cfg.speed * layerSpeed * speedMult * dtF;
         const vy = Math.sin(cfg.angle) * cfg.speed * layerSpeed * speedMult * dtF;
 
@@ -435,10 +414,7 @@ function AmbientTypeField() {
           if (s.y < -wordH - 50) s.y = d.h + wordH;
         }
 
-        /* scale pulse 95%–105% */
         s.scale = 1 + Math.sin(timestamp * cfg.pulseFreq + cfg.pulsePhase) * 0.05;
-
-        /* glitch bursts */
         cfg.glitchTimer += dt * glitchMult;
         if (!cfg.glitchActive && cfg.glitchTimer >= cfg.glitchInterval) {
           cfg.glitchActive = true;
@@ -456,14 +432,10 @@ function AmbientTypeField() {
             s.glitchSplit = Math.random() > 0.5 ? 1 : 0;
           } else {
             cfg.glitchActive = false;
-            s.glitchOffsetX = 0;
-            s.glitchOffsetY = 0;
-            s.glitchSkew = 0;
-            s.glitchSplit = 0;
+            s.glitchOffsetX = 0; s.glitchOffsetY = 0; s.glitchSkew = 0; s.glitchSplit = 0;
           }
         }
 
-        /* cursor proximity — magnetic lean + opacity nudge */
         const centerX = s.x + wordW / 2 + layerOffX;
         const centerY = s.y + wordH / 2 + layerOffY;
         centers.push({ x: centerX, y: centerY });
@@ -483,21 +455,16 @@ function AmbientTypeField() {
           s.cursorOpacityBoost += (0 - s.cursorOpacityBoost) * 0.03;
         }
 
-        /* scan-line pass → outline briefly goes solid + glow */
         const solid = Math.abs(centerY - scanY) < 64;
         if (solid !== s.scanSolid) {
           s.scanSolid = solid;
           el.style.color = solid ? cfg.color : "transparent";
         }
 
-        /* opacity — capped, eased */
-        const targetOpacity = solid
-          ? Math.min(cfg.baseOpacity + 0.34, 0.55)
-          : Math.min(cfg.baseOpacity + s.cursorOpacityBoost, 0.18);
+        const targetOpacity = solid ? Math.min(cfg.baseOpacity + 0.34, 0.55) : Math.min(cfg.baseOpacity + s.cursorOpacityBoost, 0.18);
         s.opacity += (targetOpacity - s.opacity) * 0.12;
         el.style.opacity = String(s.opacity);
 
-        /* shadow priority: glitch split > scan glow > none */
         let shadow = "none";
         if (cfg.glitchActive && s.glitchSplit) {
           shadow = `${s.glitchOffsetX * 0.5}px 0 rgba(214,255,63,0.3), ${-s.glitchOffsetX * 0.5}px 0 rgba(139,124,246,0.3)`;
@@ -505,11 +472,8 @@ function AmbientTypeField() {
           shadow = `0 0 26px ${cfg.color}66, 0 0 64px ${cfg.color}30`;
         }
         el.style.textShadow = shadow;
-
-        /* transform */
         el.style.transform = `translate3d(${s.x + s.glitchOffsetX}px, ${s.y + s.glitchOffsetY}px, 0) scale(${s.scale}) skewX(${s.cursorSkewX + s.glitchSkew}deg) skewY(${s.cursorSkewY}deg)`;
 
-        /* glyph accents — small orbits along baselines/corners */
         cfg.glyphs.forEach((g, gi) => {
           const gEl = glyphElsRef.current[`${i}:${gi}`];
           if (!gEl) return;
@@ -518,7 +482,6 @@ function AmbientTypeField() {
         });
       }
 
-      /* ── connector lines — intensify with scroll velocity ── */
       const threshold = Math.hypot(d.w, d.h) * 0.38;
       const energy = Math.min(Math.max((speedMult - 1) / 3, 0), 1);
       const pairs: { a: number; b: number; dist: number }[] = [];
@@ -546,7 +509,6 @@ function AmbientTypeField() {
         }
       }
 
-      /* ── telemetry: drifting coordinates + velocity ── */
       const cx = Math.round(scroll.y * 0.5 + mouse.x * 400);
       const cy = Math.round(scroll.y + mouse.y * 400);
       const coordsStr = `X ${pad4(cx)} · Y ${pad4(cy)} · V ${scroll.velocity.toFixed(2)}`;
@@ -590,193 +552,49 @@ function AmbientTypeField() {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-      aria-hidden="true"
-      style={{ background: "#0B0D12" }}
-    >
-      {/* ── blueprint grid ── */}
-      <div
-        ref={gridRef}
-        className="absolute -inset-[10%]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(245,243,238,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(245,243,238,0.035) 1px, transparent 1px), linear-gradient(rgba(245,243,238,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(245,243,238,0.016) 1px, transparent 1px)`,
-          backgroundSize: "120px 120px, 120px 120px, 24px 24px, 24px 24px",
-          willChange: "transform",
-        }}
-      />
-
-      {/* ── connector lines ── */}
+    <div ref={containerRef} className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true" style={{ background: "#0B0D12" }}>
+      <div ref={gridRef} className="absolute -inset-[10%]" style={{ backgroundImage: `linear-gradient(rgba(245,243,238,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(245,243,238,0.035) 1px, transparent 1px), linear-gradient(rgba(245,243,238,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(245,243,238,0.016) 1px, transparent 1px)`, backgroundSize: "120px 120px, 120px 120px, 24px 24px, 24px 24px", willChange: "transform" }} />
       <svg className="absolute inset-0 h-full w-full">
         {Array.from({ length: LINE_POOL }, (_, k) => (
-          <line
-            key={k}
-            ref={(el) => { lineElsRef.current[k] = el; }}
-            stroke={k % 2 === 0 ? LIME : PURPLE}
-            strokeWidth={1}
-            strokeDasharray="3 7"
-            style={{ strokeOpacity: 0 }}
-          />
+          <line key={k} ref={(el) => { lineElsRef.current[k] = el; }} stroke={k % 2 === 0 ? LIME : PURPLE} strokeWidth={1} strokeDasharray="3 7" style={{ strokeOpacity: 0 }} />
         ))}
       </svg>
-
-      {/* ── BACK LAYER — large, blurred, slow ── */}
-      <div
-        ref={backLayerRef}
-        className="absolute inset-0"
-        style={{ filter: "blur(3px)", willChange: "transform" }}
-      >
-        {FIELD_WORDS.map((cfg, i) =>
-          cfg.layer !== "back" ? null : (
-            <div
-              key={cfg.text}
-              ref={(el) => { wordElsRef.current[i] = el; }}
-              className="absolute left-0 top-0 select-none whitespace-nowrap"
-              style={{
-                fontSize: `${cfg.fontSize}vw`,
-                fontFamily: "var(--font-display)",
-                fontWeight: 800,
-                lineHeight: 1,
-                letterSpacing: "-0.02em",
-                color: "transparent",
-                WebkitTextStroke: `${cfg.strokeWidth}px ${cfg.color}`,
-                opacity: cfg.baseOpacity,
-                transform: `translate3d(${cfg.startX * 100}vw, ${cfg.startY * 100}vh, 0)`,
-                transition: "color 0.28s ease",
-                willChange: "transform, opacity",
-              }}
-            >
-              {cfg.text}
-              {cfg.glyphs.map((g, gi) => (
-                <span
-                  key={gi}
-                  ref={(el) => { glyphElsRef.current[`${i}:${gi}`] = el; }}
-                  className="absolute select-none"
-                  style={{
-                    ...g.pos,
-                    fontSize: g.size,
-                    lineHeight: 1,
-                    color: cfg.color,
-                    opacity: 0.2,
-                    textShadow: `0 0 8px ${cfg.color}55`,
-                    willChange: "transform",
-                  }}
-                >
-                  {g.char}
-                </span>
-              ))}
-            </div>
-          )
-        )}
+      <div ref={backLayerRef} className="absolute inset-0" style={{ filter: "blur(3px)", willChange: "transform" }}>
+        {FIELD_WORDS.map((cfg, i) => cfg.layer !== "back" ? null : (
+          <div key={cfg.text} ref={(el) => { wordElsRef.current[i] = el; }} className="absolute left-0 top-0 select-none whitespace-nowrap" style={{ fontSize: `${cfg.fontSize}vw`, fontFamily: "var(--font-display)", fontWeight: 800, lineHeight: 1, letterSpacing: "-0.02em", color: "transparent", WebkitTextStroke: `${cfg.strokeWidth}px ${cfg.color}`, opacity: cfg.baseOpacity, transform: `translate3d(${cfg.startX * 100}vw, ${cfg.startY * 100}vh, 0)`, transition: "color 0.28s ease", willChange: "transform, opacity" }}>
+            {cfg.text}
+            {cfg.glyphs.map((g, gi) => (
+              <span key={gi} ref={(el) => { glyphElsRef.current[`${i}:${gi}`] = el; }} className="absolute select-none" style={{ ...g.pos, fontSize: g.size, lineHeight: 1, color: cfg.color, opacity: 0.2, textShadow: `0 0 8px ${cfg.color}55`, willChange: "transform" }}>{g.char}</span>
+            ))}
+          </div>
+        ))}
       </div>
-
-      {/* ── FRONT LAYER — sharp, faster ── */}
       <div ref={frontLayerRef} className="absolute inset-0" style={{ willChange: "transform" }}>
-        {FIELD_WORDS.map((cfg, i) =>
-          cfg.layer !== "front" ? null : (
-            <div
-              key={cfg.text}
-              ref={(el) => { wordElsRef.current[i] = el; }}
-              className="absolute left-0 top-0 select-none whitespace-nowrap"
-              style={{
-                fontSize: `${cfg.fontSize}vw`,
-                fontFamily: "var(--font-display)",
-                fontWeight: 800,
-                lineHeight: 1,
-                letterSpacing: "-0.02em",
-                color: "transparent",
-                WebkitTextStroke: `${cfg.strokeWidth}px ${cfg.color}`,
-                opacity: cfg.baseOpacity,
-                transform: `translate3d(${cfg.startX * 100}vw, ${cfg.startY * 100}vh, 0)`,
-                transition: "color 0.28s ease",
-                willChange: "transform, opacity",
-              }}
-            >
-              {cfg.text}
-              {cfg.glyphs.map((g, gi) => (
-                <span
-                  key={gi}
-                  ref={(el) => { glyphElsRef.current[`${i}:${gi}`] = el; }}
-                  className="absolute select-none"
-                  style={{
-                    ...g.pos,
-                    fontSize: g.size,
-                    lineHeight: 1,
-                    color: cfg.color,
-                    opacity: 0.32,
-                    textShadow: `0 0 8px ${cfg.color}55`,
-                    willChange: "transform",
-                  }}
-                >
-                  {g.char}
-                </span>
-              ))}
-            </div>
-          )
-        )}
+        {FIELD_WORDS.map((cfg, i) => cfg.layer !== "front" ? null : (
+          <div key={cfg.text} ref={(el) => { wordElsRef.current[i] = el; }} className="absolute left-0 top-0 select-none whitespace-nowrap" style={{ fontSize: `${cfg.fontSize}vw`, fontFamily: "var(--font-display)", fontWeight: 800, lineHeight: 1, letterSpacing: "-0.02em", color: "transparent", WebkitTextStroke: `${cfg.strokeWidth}px ${cfg.color}`, opacity: cfg.baseOpacity, transform: `translate3d(${cfg.startX * 100}vw, ${cfg.startY * 100}vh, 0)`, transition: "color 0.28s ease", willChange: "transform, opacity" }}>
+            {cfg.text}
+            {cfg.glyphs.map((g, gi) => (
+              <span key={gi} ref={(el) => { glyphElsRef.current[`${i}:${gi}`] = el; }} className="absolute select-none" style={{ ...g.pos, fontSize: g.size, lineHeight: 1, color: cfg.color, opacity: 0.32, textShadow: `0 0 8px ${cfg.color}55`, willChange: "transform" }}>{g.char}</span>
+            ))}
+          </div>
+        ))}
       </div>
-
-      {/* ── scan line ── */}
-      <div
-        ref={scanRef}
-        className="absolute inset-x-0 top-0"
-        style={{ height: 160, willChange: "transform", transform: "translate3d(0,-200px,0)" }}
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, transparent, rgba(214,255,63,0.045) 38%, rgba(139,124,246,0.06) 52%, transparent)",
-          }}
-        />
-        <div
-          className="absolute inset-x-0 top-1/2 h-px"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent, rgba(214,255,63,0.35) 30%, rgba(139,124,246,0.35) 70%, transparent)",
-            boxShadow: "0 0 18px rgba(214,255,63,0.22)",
-          }}
-        />
+      <div ref={scanRef} className="absolute inset-x-0 top-0" style={{ height: 160, willChange: "transform", transform: "translate3d(0,-200px,0)" }}>
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent, rgba(214,255,63,0.045) 38%, rgba(139,124,246,0.06) 52%, transparent)" }} />
+        <div className="absolute inset-x-0 top-1/2 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(214,255,63,0.35) 30%, rgba(139,124,246,0.35) 70%, transparent)", boxShadow: "0 0 18px rgba(214,255,63,0.22)" }} />
       </div>
-
-      {/* ── vignette + scrims (readability) ── */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 65% 55% at 50% 50%, transparent 30%, rgba(8,10,15,0.5) 78%, rgba(8,10,15,0.78) 100%)",
-        }}
-      />
-      <div
-        className="absolute inset-x-0 top-0 h-[12%]"
-        style={{ background: "linear-gradient(to bottom, rgba(8,10,15,0.5), transparent)" }}
-      />
-      <div
-        className="absolute inset-x-0 bottom-0 h-[12%]"
-        style={{ background: "linear-gradient(to top, rgba(8,10,15,0.5), transparent)" }}
-      />
-
-      {/* ── corner telemetry ── */}
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 65% 55% at 50% 50%, transparent 30%, rgba(8,10,15,0.5) 78%, rgba(8,10,15,0.78) 100%)" }} />
+      <div className="absolute inset-x-0 top-0 h-[12%]" style={{ background: "linear-gradient(to bottom, rgba(8,10,15,0.5), transparent)" }} />
+      <div className="absolute inset-x-0 bottom-0 h-[12%]" style={{ background: "linear-gradient(to top, rgba(8,10,15,0.5), transparent)" }} />
       <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
-        <span className="text-[10px] uppercase tracking-[0.2em] text-white/60" style={{ fontFamily: "var(--font-mono)" }}>
-          Field_active
-        </span>
-        <span className="text-[10px] uppercase tracking-[0.2em] text-[#D6FF3F]/50" style={{ fontFamily: "var(--font-mono)" }}>
-          · Nodes 06
-        </span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-white/60" style={{ fontFamily: "var(--font-mono)" }}>Field_active</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-[#D6FF3F]/50" style={{ fontFamily: "var(--font-mono)" }}>· Nodes 06</span>
       </div>
-      <div
-        className="absolute bottom-5 left-5 hidden text-[10px] uppercase tracking-[0.25em] text-white/30 sm:block"
-        style={{ fontFamily: "var(--font-mono)" }}
-      >
+      <div className="absolute bottom-5 left-5 hidden text-[10px] uppercase tracking-[0.25em] text-white/30 sm:block" style={{ fontFamily: "var(--font-mono)" }}>
         <span ref={coordsRef}>X 0000 · Y 0000 · V 0.00</span>
       </div>
-      <div
-        className="absolute bottom-5 right-5 flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/30"
-        style={{ fontFamily: "var(--font-mono)" }}
-      >
+      <div className="absolute bottom-5 right-5 flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/30" style={{ fontFamily: "var(--font-mono)" }}>
         <span className="h-1 w-1 rounded-full bg-[#8B7CF6]/70" />
         Scan&nbsp;<span ref={scanPctRef} className="tabular-nums text-[#8B7CF6]/60">000</span>%
       </div>
@@ -784,13 +602,14 @@ function AmbientTypeField() {
   );
 }
 
-/* ─── Scroll Sequence (cinematic intro) ──────────────── */
+/* ─── helpers for scroll choreography ────────────────── */
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+const ramp = (p: number, start: number, end: number) => clamp01((p - start) / (end - start));
+
+/* ─── FIRST Scroll Sequence (200 images) — CLEAN ORIGINAL ──────────────── */
 const FRAME_COUNT = 200;
 const FRAME_PREFIX = "ezgif-frame-";
 const FRAME_EXT = ".jpg";
-function padFrame(n: number): string {
-  return String(n).padStart(3, "0");
-}
 
 function ScrollSequence() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -848,7 +667,6 @@ function ScrollSequence() {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = requestAnimationFrame(() => drawFrame(targetFrame));
       }
-
       if (presentsRef.current) {
         const fadeEnd = 0.25;
         const opacity = Math.max(0, 1 - clamped / fadeEnd);
@@ -882,29 +700,244 @@ function ScrollSequence() {
             </p>
           </div>
         )}
-
-        <div
-          ref={presentsRef}
-          className="pointer-events-none absolute left-6 top-1/2 z-20 -translate-y-1/2 md:left-10 lg:left-14"
-          style={{ opacity: 1, transition: "opacity 0.1s linear" }}
-        >
+        <div ref={presentsRef} className="pointer-events-none absolute left-6 top-1/2 z-20 -translate-y-1/2 md:left-10 lg:left-14" style={{ opacity: 1, transition: "opacity 0.1s linear" }}>
           <div className="flex flex-col gap-3">
             <div className="h-px w-10 bg-gradient-to-r from-[#D6FF3F]/80 to-transparent" />
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50 md:text-[12px]" style={{ fontFamily: "var(--font-mono)" }}>
-              Veyra
-            </p>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/30 md:text-[12px]" style={{ fontFamily: "var(--font-mono)" }}>
-              presents
-            </p>
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50 md:text-[12px]" style={{ fontFamily: "var(--font-mono)" }}>Veyra</p>
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/30 md:text-[12px]" style={{ fontFamily: "var(--font-mono)" }}>presents</p>
             <div className="mt-1 h-1.5 w-1.5 rounded-full bg-[#D6FF3F]/60 animate-pulse" />
           </div>
         </div>
-
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#0B0D12] via-[#0B0D12]/60 to-transparent" />
         <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2">
           <div className="flex flex-col items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
             Scroll to play
             <span className="h-8 w-px animate-pulse bg-white/40" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── BOTTOM / VINE Scroll Sequence (300 images) — SMALL FRAMED CARD + SLOW TEXT INSIDE ─────────────── */
+const BOTTOM_FRAME_COUNT = 300;
+const BOTTOM_FRAME_PREFIX = "ezgif-frame-";
+const BOTTOM_FRAME_EXT = ".jpg";
+
+function BottomScrollSequence() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imagesRef = useRef<HTMLImageElement[]>([]);
+  const frameRef = useRef(0);
+  const rafRef = useRef<number>(0);
+
+  // scroll-choreographed text overlays (positioned INSIDE the framed card)
+  const topRightRef = useRef<HTMLDivElement>(null);
+  const bottomRightRef = useRef<HTMLDivElement>(null);
+  const hintRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const imgs: HTMLImageElement[] = [];
+    let loaded = 0;
+    for (let i = 1; i <= BOTTOM_FRAME_COUNT; i++) {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = `/veyra-seq/${BOTTOM_FRAME_PREFIX}${padFrame(i)}${BOTTOM_FRAME_EXT}`;
+      img.onload = () => {
+        loaded++;
+        setLoadedCount(loaded);
+        if (loaded === BOTTOM_FRAME_COUNT) setReady(true);
+      };
+      imgs.push(img);
+    }
+    imagesRef.current = imgs;
+  }, []);
+
+  const drawFrame = useCallback((index: number) => {
+    const canvas = canvasRef.current;
+    const img = imagesRef.current[index];
+    if (!canvas || !img || !img.complete) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    // High-DPI backing store for crispness; CSS keeps native size (no upscale)
+    const dpr = window.devicePixelRatio || 1;
+    const targetWidth = Math.floor(img.naturalWidth * dpr);
+    const targetHeight = Math.floor(img.naturalHeight * dpr);
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    const onScroll = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const scrollableHeight = rect.height - window.innerHeight;
+      if (scrollableHeight <= 0) return;
+      const clamped = clamp01(-rect.top / scrollableHeight);
+
+      // 1) frame playback (vine grows horizontally)
+      const targetFrame = Math.min(Math.round(clamped * (BOTTOM_FRAME_COUNT - 1)), BOTTOM_FRAME_COUNT - 1);
+      if (targetFrame !== frameRef.current) {
+        frameRef.current = targetFrame;
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => drawFrame(targetFrame));
+      }
+
+      // 2) top-right copy — reveals early (vine starts growing)
+      if (topRightRef.current) {
+        const t = ramp(clamped, 0.12, 0.34);
+        topRightRef.current.style.opacity = String(t);
+        topRightRef.current.style.transform = `translateY(${(1 - t) * 26}px)`;
+      }
+
+      // 3) bottom-right copy — reveals later (vine nearly full)
+      if (bottomRightRef.current) {
+        const t = ramp(clamped, 0.5, 0.74);
+        bottomRightRef.current.style.opacity = String(t);
+        bottomRightRef.current.style.transform = `translateY(${(1 - t) * 26}px)`;
+      }
+
+      // 4) scroll hint — fades out fast
+      if (hintRef.current) {
+        hintRef.current.style.opacity = String(clamp01(1 - clamped / 0.1));
+      }
+
+      // 5) bottom progress line — grows with the vine
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${clamped})`;
+      }
+    };
+    drawFrame(0);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", () => drawFrame(frameRef.current), { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", () => drawFrame(frameRef.current));
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [ready, drawFrame]);
+
+  const loadPercent = Math.round((loadedCount / BOTTOM_FRAME_COUNT) * 100);
+
+  return (
+    <section ref={containerRef} className="relative z-10 w-full bg-[#0B0D12]" style={{ height: `${BOTTOM_FRAME_COUNT * 1.2}vh` }}>
+      {/* center the small framed card in the viewport */}
+      <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden bg-[#0B0D12] p-4 sm:p-6">
+        {/* loader (full-screen centered) */}
+        {!ready && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-[#0B0D12]">
+            <div className="h-1 w-48 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-[#D6FF3F] transition-all duration-200" style={{ width: `${loadPercent}%` }} />
+            </div>
+            <p className="text-[12px] uppercase tracking-[0.25em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
+              Loading sequence… {loadPercent}%
+            </p>
+          </div>
+        )}
+
+        {/* ── the framed card: shrink-wraps the canvas so the overlay matches it exactly ── */}
+        <div
+          className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10"
+          style={{ maxHeight: "80vh", maxWidth: "92vw", display: ready ? "block" : "none" }}
+        >
+          {/* native-size canvas → no upscaling → crisp */}
+          <canvas
+            ref={canvasRef}
+            className="block h-auto w-auto"
+            style={{ maxHeight: "80vh", maxWidth: "92vw" }}
+          />
+
+          {/* ── overlay layer — exactly the card's size ── */}
+          <div className="pointer-events-none absolute inset-0">
+            {/* legibility scrims (clipped to the rounded card) */}
+            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/45 via-black/10 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+            <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-black/35 to-transparent" />
+
+            {/* editorial label, top-left */}
+            <div className="absolute left-4 top-4 sm:left-5 sm:top-5">
+              <p className="text-[9px] uppercase tracking-[0.3em] text-white/40 sm:text-[10px]" style={{ fontFamily: "var(--font-mono)" }}>
+                Veyra — seq. 02 / growth
+              </p>
+            </div>
+
+            {/* ── TOP-RIGHT copy block ─────────────────────────────── */}
+            <div
+              ref={topRightRef}
+              className="absolute right-4 top-[12%] max-w-[60%] text-right sm:right-6 sm:max-w-[15rem]"
+              style={{ opacity: 0, transform: "translateY(26px)" }}
+            >
+              <div className="mb-3 ml-auto h-px w-10 bg-gradient-to-l from-[#D6FF3F]/80 to-transparent" />
+              <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#D6FF3F] sm:text-[10px]" style={{ fontFamily: "var(--font-mono)" }}>
+                Growth, observed
+              </p>
+              <h2
+                className="text-lg leading-[1.08] text-white sm:text-2xl lg:text-3xl"
+                style={{ fontFamily: "var(--font-display)", fontWeight: 700, textShadow: "0 2px 24px rgba(0,0,0,0.6)" }}
+              >
+                We don&apos;t force it.
+                <br />
+                <span className="bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] bg-clip-text text-transparent">
+                  We grow it.
+                </span>
+              </h2>
+              <p className="mt-3 text-[10px] leading-relaxed text-white/75 sm:text-[12px]" style={{ textShadow: "0 1px 14px rgba(0,0,0,0.65)" }}>
+                Real brands behave like living things — they need the right soil,
+                light, and time. We tend the conditions until momentum takes root.
+              </p>
+            </div>
+
+            {/* ── BOTTOM-RIGHT copy block ──────────────────────────── */}
+            <div
+              ref={bottomRightRef}
+              className="absolute bottom-[12%] right-4 max-w-[60%] text-right sm:right-6 sm:max-w-[15rem]"
+              style={{ opacity: 0, transform: "translateY(26px)" }}
+            >
+              <blockquote className="text-[11px] italic leading-relaxed text-white/90 sm:text-sm" style={{ textShadow: "0 1px 14px rgba(0,0,0,0.65)" }}>
+                &ldquo;Every leaf on that vine is a decision we tested before we let
+                it grow.&rdquo;
+              </blockquote>
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <span className="text-[9px] uppercase tracking-[0.25em] text-white/50 sm:text-[10px]" style={{ fontFamily: "var(--font-mono)" }}>
+                  Creative × Digital Lab
+                </span>
+                <span className="h-1.5 w-1.5 rounded-full bg-[#D6FF3F] animate-pulse" />
+              </div>
+              <a
+                href="#work"
+                className="pointer-events-auto mt-3 inline-block rounded-full border border-white/20 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm transition hover:border-[#D6FF3F]/70 hover:text-white"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                See the work →
+              </a>
+            </div>
+
+            {/* ── scroll hint (fades out) ──────────────────────────── */}
+            <div ref={hintRef} className="absolute bottom-4 left-1/2 -translate-x-1/2">
+              <div className="flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/45" style={{ fontFamily: "var(--font-mono)" }}>
+                Scroll to grow
+                <span className="h-6 w-px animate-pulse bg-white/40" />
+              </div>
+            </div>
+
+            {/* ── bottom progress line (grows with the vine) ───────── */}
+            <div className="absolute inset-x-0 bottom-0 h-[2px] bg-white/5">
+              <div ref={progressRef} className="h-full origin-left bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6]" style={{ transform: "scaleX(0)" }} />
+            </div>
           </div>
         </div>
       </div>
@@ -918,50 +951,29 @@ function SplineShowpiece() {
     <section className="relative z-10 overflow-hidden border-t border-white/[0.06] px-6 py-32 md:px-10">
       <div className="relative mx-auto max-w-6xl">
         <Reveal>
-          <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
-            Interactive · 3D
-          </p>
+          <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>Interactive · 3D</p>
         </Reveal>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <Reveal delay={80}>
-            <h2 className="max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-              Step inside the lab.
-            </h2>
+            <h2 className="max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>Step inside the lab.</h2>
           </Reveal>
           <Reveal delay={140}>
-            <p className="max-w-sm text-sm leading-relaxed text-white/55">
-              Drag, hover, poke — this one&apos;s alive. A tiny corner of the Veyra universe you can actually play with.
-            </p>
+            <p className="max-w-sm text-sm leading-relaxed text-white/55">Drag, hover, poke — this one&apos;s alive. A tiny corner of the Veyra universe you can actually play with.</p>
           </Reveal>
         </div>
         <Reveal delay={180}>
           <div className="group relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-[#0B0D12]/80 backdrop-blur-sm shadow-[0_50px_140px_-40px_rgba(139,124,246,0.45)]">
             <div className="relative h-[58vh] min-h-[400px] w-full sm:h-[66vh] lg:h-[70vh]">
-              <iframe
-                src="https://my.spline.design/booleansinteractioncopycopy-tmPEv7BelAEG9pCQbWci6jvb-Ool/"
-                frameBorder="0"
-                loading="lazy"
-                width="100%"
-                height="100%"
-                className="absolute inset-0 h-full w-full"
-                title="Veyra 3D interaction"
-              />
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{ background: "radial-gradient(ellipse 75% 75% at 50% 50%, transparent 52%, rgba(11,13,18,0.55) 88%, rgba(11,13,18,0.9) 100%)" }}
-              />
+              <iframe src="https://my.spline.design/booleansinteractioncopycopy-tmPEv7BelAEG9pCQbWci6jvb-Ool/" frameBorder="0" loading="lazy" width="100%" height="100%" className="absolute inset-0 h-full w-full" title="Veyra 3D interaction" />
+              <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 75% 75% at 50% 50%, transparent 52%, rgba(11,13,18,0.55) 88%, rgba(11,13,18,0.9) 100%)" }} />
               <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#0B0D12]/80 to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0B0D12]/80 to-transparent" />
               <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-inset ring-white/5 transition duration-500 group-hover:ring-[#D6FF3F]/25" />
               <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: "var(--font-mono)" }}>
-                  3D · Live
-                </span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: "var(--font-mono)" }}>3D · Live</span>
               </div>
-              <div className="pointer-events-none absolute bottom-5 right-5 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/70 backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)" }}>
-                Drag to explore
-              </div>
+              <div className="pointer-events-none absolute bottom-5 right-5 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/70 backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)" }}>Drag to explore</div>
             </div>
           </div>
         </Reveal>
@@ -977,79 +989,25 @@ function SkillBar({ label, value, color, delay = 0 }: { label: string; value: nu
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          setOn(true);
-          io.disconnect();
-        }
-      },
-      { threshold: 0.4 }
-    );
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setOn(true); io.disconnect(); } }, { threshold: 0.4 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
   return (
     <div ref={ref}>
       <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-[12px] uppercase tracking-[0.15em] text-white/55" style={{ fontFamily: "var(--font-mono)" }}>
-          {label}
-        </span>
-        <span className="text-[12px] tabular-nums" style={{ fontFamily: "var(--font-mono)", color }}>
-          {value}
-        </span>
+        <span className="text-[12px] uppercase tracking-[0.15em] text-white/55" style={{ fontFamily: "var(--font-mono)" }}>{label}</span>
+        <span className="text-[12px] tabular-nums" style={{ fontFamily: "var(--font-mono)", color }}>{value}</span>
       </div>
       <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full"
-          style={{
-            width: `${value}%`,
-            background: `linear-gradient(90deg, ${color}66, ${color})`,
-            transform: on ? "scaleX(1)" : "scaleX(0)",
-            transformOrigin: "left",
-            transition: `transform 1.1s cubic-bezier(.16,1,.3,1) ${delay}ms`,
-            boxShadow: `0 0 12px ${color}55`,
-          }}
-        />
+        <div className="h-full rounded-full" style={{ width: `${value}%`, background: `linear-gradient(90deg, ${color}66, ${color})`, transform: on ? "scaleX(1)" : "scaleX(0)", transformOrigin: "left", transition: `transform 1.1s cubic-bezier(.16,1,.3,1) ${delay}ms`, boxShadow: `0 0 12px ${color}55` }} />
       </div>
     </div>
   );
 }
 
 /* ─── animated portrait card ─────────────────────────── */
-function PortraitCard({
-  accent,
-  eyebrow,
-  name,
-  role,
-  quote,
-  bio,
-  tags,
-  skills,
-  socials,
-  imgSrc,
-  imgAlt,
-  objectPosition = "center 30%",
-  glyphs,
-  side,
-  indexLabel,
-}: {
-  accent: Accent;
-  eyebrow: string;
-  name: string;
-  role: string;
-  quote: string;
-  bio: string;
-  tags: string[];
-  skills: { label: string; value: number }[];
-  socials: { l: string; h: string }[];
-  imgSrc: string;
-  imgAlt: string;
-  objectPosition?: string;
-  glyphs: Glyph[];
-  side: "left" | "right";
-  indexLabel: string;
-}) {
+function PortraitCard({ accent, eyebrow, name, role, quote, bio, tags, skills, socials, imgSrc, imgAlt, objectPosition = "center 30%", glyphs, side, indexLabel }: { accent: Accent; eyebrow: string; name: string; role: string; quote: string; bio: string; tags: string[]; skills: { label: string; value: number }[]; socials: { l: string; h: string }[]; imgSrc: string; imgAlt: string; objectPosition?: string; glyphs: Glyph[]; side: "left" | "right"; indexLabel: string }) {
   const color = ACCENTS[accent];
   const sectionRef = useRef<HTMLDivElement>(null);
   const tiltWrapRef = useRef<HTMLDivElement>(null);
@@ -1061,15 +1019,7 @@ function PortraitCard({
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          setInView(true);
-          io.disconnect();
-        }
-      },
-      { threshold: 0.25 }
-    );
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setInView(true); io.disconnect(); } }, { threshold: 0.25 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -1094,29 +1044,19 @@ function PortraitCard({
     };
     wrap.addEventListener("mousemove", onMove);
     wrap.addEventListener("mouseleave", onLeave);
-    return () => {
-      wrap.removeEventListener("mousemove", onMove);
-      wrap.removeEventListener("mouseleave", onLeave);
-    };
+    return () => { wrap.removeEventListener("mousemove", onMove); wrap.removeEventListener("mouseleave", onLeave); };
   }, []);
 
-  useGSAP(
-    () => {
-      if (!sectionRef.current) return;
-      if (imgRef.current) {
-        gsap.fromTo(
-          imgRef.current,
-          { yPercent: -7 },
-          { yPercent: 7, ease: "none", scrollTrigger: { trigger: sectionRef.current, start: "top bottom", end: "bottom top", scrub: true } }
-        );
-      }
-      gsap.utils.toArray<HTMLElement>(".pfloat", sectionRef.current).forEach((el) => {
-        const s = parseFloat(el.dataset.speed || "1");
-        gsap.to(el, { y: -80 * s, ease: "none", scrollTrigger: { trigger: sectionRef.current, start: "top bottom", end: "bottom top", scrub: true } });
-      });
-    },
-    { scope: sectionRef }
-  );
+  useGSAP(() => {
+    if (!sectionRef.current) return;
+    if (imgRef.current) {
+      gsap.fromTo(imgRef.current, { yPercent: -7 }, { yPercent: 7, ease: "none", scrollTrigger: { trigger: sectionRef.current, start: "top bottom", end: "bottom top", scrub: true } });
+    }
+    gsap.utils.toArray<HTMLElement>(".pfloat", sectionRef.current).forEach((el) => {
+      const s = parseFloat(el.dataset.speed || "1");
+      gsap.to(el, { y: -80 * s, ease: "none", scrollTrigger: { trigger: sectionRef.current, start: "top bottom", end: "bottom top", scrub: true } });
+    });
+  }, { scope: sectionRef });
 
   const brackets = [
     { c: "border-l-2 border-t-2", o: "-left-3 -top-3", origin: "top left" },
@@ -1128,71 +1068,31 @@ function PortraitCard({
   const imageBlock = (
     <div className={side === "right" ? "lg:order-2" : "lg:order-1"}>
       <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-        <span
-          className="pointer-events-none absolute -left-5 top-1/2 hidden -translate-y-1/2 -rotate-90 whitespace-nowrap text-[11px] uppercase tracking-[0.4em] lg:block"
-          style={{ fontFamily: "var(--font-mono)", color: `${color}80` }}
-        >
-          {indexLabel}
-        </span>
-
+        <span className="pointer-events-none absolute -left-5 top-1/2 hidden -translate-y-1/2 -rotate-90 whitespace-nowrap text-[11px] uppercase tracking-[0.4em] lg:block" style={{ fontFamily: "var(--font-mono)", color: `${color}80` }}>{indexLabel}</span>
         <div className="aura-blob pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] blur-3xl" style={{ background: `${color}26` }} />
         <div className="aura-blob aura-blob-2 pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] blur-3xl" style={{ background: `${accent === "lime" ? ACCENTS.purple : ACCENTS.lime}1f` }} />
-
         <div ref={tiltWrapRef} style={{ perspective: "1100px" }}>
           <div ref={cardRef} className="relative" style={{ transformStyle: "preserve-3d", transition: "transform 0.25s ease-out", willChange: "transform" }}>
             {brackets.map((b, i) => (
-              <span
-                key={i}
-                className={`pointer-events-none absolute z-20 h-8 w-8 ${b.c} ${b.o}`}
-                style={{
-                  borderColor: color,
-                  transformOrigin: b.origin,
-                  transform: inView ? "scale(1)" : "scale(0)",
-                  opacity: inView ? 0.8 : 0,
-                  transition: `transform .6s cubic-bezier(.34,1.56,.64,1) ${0.15 + i * 0.08}s, opacity .4s ease ${0.15 + i * 0.08}s`,
-                }}
-              />
+              <span key={i} className={`pointer-events-none absolute z-20 h-8 w-8 ${b.c} ${b.o}`} style={{ borderColor: color, transformOrigin: b.origin, transform: inView ? "scale(1)" : "scale(0)", opacity: inView ? 0.8 : 0, transition: `transform .6s cubic-bezier(.34,1.56,.64,1) ${0.15 + i * 0.08}s, opacity .4s ease ${0.15 + i * 0.08}s` }} />
             ))}
-
-            <div
-              ref={frameRef}
-              className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl border shadow-[inset_0_0_90px_rgba(11,13,18,0.6)]"
-              style={{ borderColor: `${color}33`, ["--gx" as any]: "50%", ["--gy" as any]: "30%", ["--glare" as any]: "0" }}
-            >
-              <img
-                ref={imgRef}
-                src={imgSrc}
-                alt={imgAlt}
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 h-full w-full scale-115 object-cover"
-                style={{ objectPosition, willChange: "transform", filter: "contrast(1.06) saturate(0.95) brightness(0.97)" }}
-              />
+            <div ref={frameRef} className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl border shadow-[inset_0_0_90px_rgba(11,13,18,0.6)]" style={{ borderColor: `${color}33`, ["--gx" as any]: "50%", ["--gy" as any]: "30%", ["--glare" as any]: "0" }}>
+              <img ref={imgRef} src={imgSrc} alt={imgAlt} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full scale-115 object-cover" style={{ objectPosition, willChange: "transform", filter: "contrast(1.06) saturate(0.95) brightness(0.97)" }} />
               <div className="pointer-events-none absolute inset-0 mix-blend-soft-light" style={{ background: `linear-gradient(150deg, ${color}cc, transparent 55%, ${accent === "lime" ? ACCENTS.purple : ACCENTS.lime}99)` }} />
               <div className="grain pointer-events-none absolute inset-0" />
               <div className="scan-line pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-transparent via-white/40 to-transparent mix-blend-soft-light" />
-              <div
-                className="pointer-events-none absolute inset-0 transition-opacity duration-300"
-                style={{ background: "radial-gradient(circle at var(--gx) var(--gy), rgba(255,255,255,0.32), transparent 45%)", opacity: "var(--glare)" }}
-              />
+              <div className="pointer-events-none absolute inset-0 transition-opacity duration-300" style={{ background: "radial-gradient(circle at var(--gx) var(--gy), rgba(255,255,255,0.32), transparent 45%)", opacity: "var(--glare)" }} />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#0B0D12]/85 to-transparent" />
               <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: color }} />
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: "var(--font-mono)" }}>
-                  Portrait / Live
-                </span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: "var(--font-mono)" }}>Portrait / Live</span>
               </div>
-              <div className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)", color: `${color}cc` }}>
-                Est. Veyra
-              </div>
+              <div className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)", color: `${color}cc` }}>Est. Veyra</div>
             </div>
-
             {glyphs.map((g, i) => (
               <div key={i} className="pfloat pointer-events-none absolute z-30" data-speed={g.speed} style={g.pos}>
                 <div style={{ transform: `translateZ(${g.z}px)` }}>
-                  <span className="float-slow block" style={{ animationDelay: g.delay, color: g.color, fontSize: g.size, lineHeight: 1, filter: `drop-shadow(0 0 14px ${g.color}66)` }}>
-                    {g.char}
-                  </span>
+                  <span className="float-slow block" style={{ animationDelay: g.delay, color: g.color, fontSize: g.size, lineHeight: 1, filter: `drop-shadow(0 0 14px ${g.color}66)` }}>{g.char}</span>
                 </div>
               </div>
             ))}
@@ -1204,56 +1104,25 @@ function PortraitCard({
 
   const textBlock = (
     <div className={side === "right" ? "lg:order-1" : "lg:order-2"}>
-      <Reveal>
-        <span className="inline-block rounded-full border px-4 py-1.5 text-[11px] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)", borderColor: `${color}55`, color: `${color}dd` }}>
-          {role}
-        </span>
-      </Reveal>
-      <Reveal delay={80}>
-        <h3 className="mt-6 text-5xl sm:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-          {name}
-        </h3>
-      </Reveal>
-      <Reveal delay={140}>
-        <p className="mt-6 text-base leading-relaxed text-white/60 sm:text-lg">{bio}</p>
-      </Reveal>
+      <Reveal><span className="inline-block rounded-full border px-4 py-1.5 text-[11px] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)", borderColor: `${color}55`, color: `${color}dd` }}>{role}</span></Reveal>
+      <Reveal delay={80}><h3 className="mt-6 text-5xl sm:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>{name}</h3></Reveal>
+      <Reveal delay={140}><p className="mt-6 text-base leading-relaxed text-white/60 sm:text-lg">{bio}</p></Reveal>
       <Reveal delay={200}>
         <div className="mt-8 space-y-4">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-white/35" style={{ fontFamily: "var(--font-mono)" }}>
-            Core skills
-          </p>
-          {skills.map((s, i) => (
-            <SkillBar key={s.label} label={s.label} value={s.value} color={color} delay={i * 120} />
-          ))}
+          <p className="text-[11px] uppercase tracking-[0.25em] text-white/35" style={{ fontFamily: "var(--font-mono)" }}>Core skills</p>
+          {skills.map((s, i) => (<SkillBar key={s.label} label={s.label} value={s.value} color={color} delay={i * 120} />))}
         </div>
       </Reveal>
       <Reveal delay={260}>
         <div className="mt-7 flex flex-wrap gap-2">
-          {tags.map((t) => (
-            <span key={t} className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] uppercase tracking-[0.15em] text-white/55" style={{ fontFamily: "var(--font-mono)" }}>
-              {t}
-            </span>
-          ))}
+          {tags.map((t) => (<span key={t} className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] uppercase tracking-[0.15em] text-white/55" style={{ fontFamily: "var(--font-mono)" }}>{t}</span>))}
         </div>
       </Reveal>
-      <Reveal delay={320}>
-        <blockquote className="mt-8 border-l-2 pl-5 text-lg italic leading-relaxed text-white/75 sm:text-xl" style={{ borderColor: `${color}99` }}>
-          &ldquo;{quote}&rdquo;
-        </blockquote>
-      </Reveal>
+      <Reveal delay={320}><blockquote className="mt-8 border-l-2 pl-5 text-lg italic leading-relaxed text-white/75 sm:text-xl" style={{ borderColor: `${color}99` }}>&ldquo;{quote}&rdquo;</blockquote></Reveal>
       <Reveal delay={380}>
         <div className="mt-8 flex flex-wrap gap-3">
           {socials.map((s) => (
-            <a
-              key={s.l}
-              href={s.h}
-              className="rounded-full border border-white/15 px-4 py-2 text-[11px] uppercase tracking-[0.15em] text-white/70 transition hover:text-white"
-              style={{ fontFamily: "var(--font-mono)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${color}99`)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)")}
-            >
-              {s.l}
-            </a>
+            <a key={s.l} href={s.h} className="rounded-full border border-white/15 px-4 py-2 text-[11px] uppercase tracking-[0.15em] text-white/70 transition hover:text-white" style={{ fontFamily: "var(--font-mono)" }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${color}99`)} onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)")}>{s.l}</a>
           ))}
         </div>
       </Reveal>
@@ -1263,20 +1132,9 @@ function PortraitCard({
   return (
     <section ref={sectionRef} className="relative z-10 border-t border-white/[0.06] px-6 py-28 md:px-10">
       <div className="relative mx-auto max-w-7xl">
-        <Reveal>
-          <p className="mb-4 text-[12px] uppercase tracking-[0.25em]" style={{ fontFamily: "var(--font-mono)", color }}>
-            {eyebrow}
-          </p>
-        </Reveal>
-        <Reveal delay={80}>
-          <h2 className="mb-14 max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-            {side === "left" ? "The vision behind the lab." : "The face behind the pixels."}
-          </h2>
-        </Reveal>
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {imageBlock}
-          {textBlock}
-        </div>
+        <Reveal><p className="mb-4 text-[12px] uppercase tracking-[0.25em]" style={{ fontFamily: "var(--font-mono)", color }}>{eyebrow}</p></Reveal>
+        <Reveal delay={80}><h2 className="mb-14 max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>{side === "left" ? "The vision behind the lab." : "The face behind the pixels."}</h2></Reveal>
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">{imageBlock}{textBlock}</div>
       </div>
     </section>
   );
@@ -1312,30 +1170,9 @@ const philosophy = [
   { num: "03", text: "Great work outlives the campaign that launched it." },
 ];
 
-/* ─── Manifesto ──────────────────────────────────────── */
-function ManifestoSequence() {
-  return (
-    <section className="relative z-10 w-full bg-[#0B0D12]" style={{ height: `100vh` }}>
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#0B0D12]">
-        <img src="/veyra-sequence-again/hello.webp" alt="Hero Animation" className="h-full w-full object-cover" decoding="async" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0B0D12] via-[#0B0D12]/60 to-transparent" />
-        <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 transition-opacity duration-500">
-          <div className="flex flex-col items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
-            Scroll to explore
-            <span className="h-8 w-px animate-pulse bg-white/40" />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
+/* ─── Manifesto / Bottom Scroll Section ──────────────── */
 function ManifestoSection() {
-  return (
-    <div>
-      <ManifestoSequence />
-    </div>
-  );
+  return <BottomScrollSequence />;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1344,41 +1181,23 @@ function ManifestoSection() {
 export default function Home() {
   return (
     <main className="relative">
-      {/* Giant kinetic typography field — fixed, behind everything */}
       <AmbientTypeField />
-
       <ScrollProgress />
 
-      {/* 1. SCROLL SEQUENCE (cinematic intro) */}
+      {/* 1. SCROLL SEQUENCE (First: 200 images, clean) */}
       <ScrollSequence />
 
       {/* 2. HERO */}
       <section className="relative z-10 flex min-h-[88vh] items-center overflow-hidden border-t border-white/[0.06] px-6 md:px-10">
         <div className="relative mx-auto w-full max-w-7xl">
           <div className="max-w-3xl">
-            <Reveal>
-              <p className="mb-5 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]/90" style={{ fontFamily: "var(--font-mono)" }}>
-                Digital Marketing × Creative Lab
-              </p>
-            </Reveal>
-            <Reveal delay={80}>
-              <h1 className="veyra-shimmer text-7xl leading-[0.92] sm:text-8xl lg:text-[9rem]" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                VEYRA
-              </h1>
-            </Reveal>
-            <Reveal delay={160}>
-              <p className="mt-7 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg">
-                We build brands, campaigns, and products that behave like living things — shaped, tested, and set loose in the world.
-              </p>
-            </Reveal>
+            <Reveal><p className="mb-5 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]/90" style={{ fontFamily: "var(--font-mono)" }}>Digital Marketing × Creative Lab</p></Reveal>
+            <Reveal delay={80}><h1 className="veyra-shimmer text-7xl leading-[0.92] sm:text-8xl lg:text-[9rem]" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>VEYRA</h1></Reveal>
+            <Reveal delay={160}><p className="mt-7 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg">We build brands, campaigns, and products that behave like living things — shaped, tested, and set loose in the world.</p></Reveal>
             <Reveal delay={240}>
               <div className="mt-9 flex flex-wrap items-center gap-4">
-                <a href="#contact" className="rounded-full bg-[#D6FF3F] px-6 py-3 text-sm font-medium text-black transition hover:bg-white hover:scale-105">
-                  Start a project
-                </a>
-                <a href="#work" className="rounded-full border border-white/20 px-6 py-3 text-sm text-white/85 transition hover:border-white/50 hover:scale-105">
-                  See our work
-                </a>
+                <a href="#contact" className="rounded-full bg-[#D6FF3F] px-6 py-3 text-sm font-medium text-black transition hover:bg-white hover:scale-105">Start a project</a>
+                <a href="#work" className="rounded-full border border-white/20 px-6 py-3 text-sm text-white/85 transition hover:border-white/50 hover:scale-105">See our work</a>
               </div>
             </Reveal>
             <Reveal delay={320}>
@@ -1394,31 +1213,15 @@ export default function Home() {
       {/* 3. PHILOSOPHY */}
       <section className="relative z-10 border-t border-white/[0.06] px-6 py-36 md:px-10 md:py-44">
         <div className="relative mx-auto max-w-5xl">
-          <Reveal>
-            <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
-              Our philosophy
-            </p>
-          </Reveal>
-          <Reveal delay={80}>
-            <h2 className="max-w-3xl text-4xl leading-[1.08] sm:text-5xl lg:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-              Marketing is a science. <span className="text-white/30">Branding is an art.</span>{" "}
-              <span className="bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] bg-clip-text text-transparent">We practice both.</span>
-            </h2>
-          </Reveal>
-          <Reveal delay={200}>
-            <div className="my-16 flex items-center gap-4">
-              <div className="h-px flex-1 bg-gradient-to-r from-[#D6FF3F]/60 via-[#8B7CF6]/40 to-transparent origin-left" />
-              <div className="h-2 w-2 rounded-full bg-[#D6FF3F] animate-pulse" />
-            </div>
-          </Reveal>
+          <Reveal><p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>Our philosophy</p></Reveal>
+          <Reveal delay={80}><h2 className="max-w-3xl text-4xl leading-[1.08] sm:text-5xl lg:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>Marketing is a science. <span className="text-white/30">Branding is an art.</span> <span className="bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] bg-clip-text text-transparent">We practice both.</span></h2></Reveal>
+          <Reveal delay={200}><div className="my-16 flex items-center gap-4"><div className="h-px flex-1 bg-gradient-to-r from-[#D6FF3F]/60 via-[#8B7CF6]/40 to-transparent origin-left" /><div className="h-2 w-2 rounded-full bg-[#D6FF3F] animate-pulse" /></div></Reveal>
           <div className="grid grid-cols-1 gap-0 md:grid-cols-3 md:gap-8">
             {philosophy.map((p, i) => (
               <ScrollParallax key={p.num} speed={0.12 + i * 0.06} direction="up">
                 <Reveal delay={280 + i * 120}>
                   <div className="group relative rounded-2xl p-6 transition-colors duration-500 hover:bg-white/[0.02] md:p-8">
-                    <p className="mb-4 text-5xl font-bold text-white/[0.04] transition-colors duration-500 group-hover:text-[#D6FF3F]/20" style={{ fontFamily: "var(--font-display)" }}>
-                      {p.num}
-                    </p>
+                    <p className="mb-4 text-5xl font-bold text-white/[0.04] transition-colors duration-500 group-hover:text-[#D6FF3F]/20" style={{ fontFamily: "var(--font-display)" }}>{p.num}</p>
                     <p className="text-base leading-relaxed text-white/55 transition-colors duration-500 group-hover:text-white/80 sm:text-lg">{p.text}</p>
                     <div className="mt-6 h-px w-12 bg-white/10 transition-all duration-500 group-hover:w-20 group-hover:bg-[#D6FF3F]/50" />
                   </div>
@@ -1432,16 +1235,8 @@ export default function Home() {
       {/* 4. CAPABILITIES */}
       <section id="capabilities" className="relative z-10 border-t border-white/[0.06] px-6 py-32 md:px-10">
         <div className="relative mx-auto max-w-7xl">
-          <Reveal>
-            <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>
-              What we build
-            </p>
-          </Reveal>
-          <Reveal delay={80}>
-            <h2 className="max-w-2xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-              Full-spectrum growth, run like a lab — not a portfolio of favors.
-            </h2>
-          </Reveal>
+          <Reveal><p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>What we build</p></Reveal>
+          <Reveal delay={80}><h2 className="max-w-2xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>Full-spectrum growth, run like a lab — not a portfolio of favors.</h2></Reveal>
           <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-2xl bg-white/[0.06] sm:grid-cols-2">
             {capabilities.map((cap, i) => (
               <Reveal key={cap.title} delay={i * 90}>
@@ -1449,14 +1244,10 @@ export default function Home() {
                   <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-[#D6FF3F]/0 transition-all duration-500 blur-[60px] group-hover:bg-[#D6FF3F]/10" />
                   <div className="relative">
                     <div className="mb-8 flex items-center justify-between">
-                      <p className="text-[12px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
-                        {cap.tag}
-                      </p>
+                      <p className="text-[12px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>{cap.tag}</p>
                       <span className="text-lg text-white/10 transition-all duration-300 group-hover:text-[#D6FF3F]/40 group-hover:scale-125">{cap.icon}</span>
                     </div>
-                    <h3 className="mb-3 text-2xl transition group-hover:text-[#D6FF3F]" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                      {cap.title}
-                    </h3>
+                    <h3 className="mb-3 text-2xl transition group-hover:text-[#D6FF3F]" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>{cap.title}</h3>
                     <p className="max-w-sm text-[15px] leading-relaxed text-white/55">{cap.desc}</p>
                   </div>
                 </div>
@@ -1471,24 +1262,11 @@ export default function Home() {
         <div className="relative mx-auto max-w-7xl">
           <div className="mb-16 flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Reveal>
-                <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
-                  Selected work
-                </p>
-              </Reveal>
-              <Reveal delay={80}>
-                <h2 className="max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                  Results that outlive the campaign.
-                </h2>
-              </Reveal>
+              <Reveal><p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>Selected work</p></Reveal>
+              <Reveal delay={80}><h2 className="max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>Results that outlive the campaign.</h2></Reveal>
             </div>
-            <Reveal delay={120}>
-              <a href="#contact" className="whitespace-nowrap text-sm text-white/60 underline underline-offset-4 transition hover:text-white">
-                View all case studies →
-              </a>
-            </Reveal>
+            <Reveal delay={120}><a href="#contact" className="whitespace-nowrap text-sm text-white/60 underline underline-offset-4 transition hover:text-white">View all case studies →</a></Reveal>
           </div>
-
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {work.map((w, i) => (
               <Reveal key={w.title} delay={i * 90}>
@@ -1497,20 +1275,12 @@ export default function Home() {
                     <img src={w.img} alt={w.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#12141b] via-[#12141b]/10 to-transparent" />
                     <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${w.gradient} opacity-0 mix-blend-soft-light transition-opacity duration-300 group-hover:opacity-50`} />
-                    <span className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)" }}>
-                      {w.tag}
-                    </span>
-                    <span className="absolute right-4 top-4 text-[11px] tabular-nums text-white/45" style={{ fontFamily: "var(--font-mono)" }}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                    <span className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)" }}>{w.tag}</span>
+                    <span className="absolute right-4 top-4 text-[11px] tabular-nums text-white/45" style={{ fontFamily: "var(--font-mono)" }}>{String(i + 1).padStart(2, "0")}</span>
                   </div>
                   <div className="relative flex flex-1 flex-col p-6">
-                    <h3 className="text-xl transition-colors duration-300 group-hover:text-[#D6FF3F] sm:text-2xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                      {w.title}
-                    </h3>
-                    <p className="mt-2 text-[13px] font-medium" style={{ fontFamily: "var(--font-mono)", color: "#D6FF3F" }}>
-                      {w.metric}
-                    </p>
+                    <h3 className="text-xl transition-colors duration-300 group-hover:text-[#D6FF3F] sm:text-2xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>{w.title}</h3>
+                    <p className="mt-2 text-[13px] font-medium" style={{ fontFamily: "var(--font-mono)", color: "#D6FF3F" }}>{w.metric}</p>
                     <p className="mt-3 text-sm leading-relaxed text-white/55">{w.desc}</p>
                   </div>
                   <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] transition-all duration-500 group-hover:w-full" />
@@ -1518,25 +1288,18 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
-
           <Reveal delay={120}>
             <div className="mt-16 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/80 backdrop-blur-sm">
               <div className="grid grid-cols-2 sm:grid-cols-4">
                 {workStats.map((s) => (
                   <div key={s.label} className="border-white/[0.06] px-6 py-9 text-center [&:not(:nth-child(2n))]:border-r sm:[&:not(:nth-child(2n))]:border-r-0 sm:[&:not(:first-child)]:border-l">
-                    <p className="bg-gradient-to-br from-white to-white/50 bg-clip-text text-3xl text-transparent sm:text-4xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                      {s.value}
-                    </p>
-                    <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
-                      {s.label}
-                    </p>
+                    <p className="bg-gradient-to-br from-white to-white/50 bg-clip-text text-3xl text-transparent sm:text-4xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>{s.value}</p>
+                    <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>{s.label}</p>
                   </div>
                 ))}
               </div>
               <div className="border-t border-white/[0.06] px-6 py-5 text-center">
-                <p className="text-[12px] uppercase tracking-[0.2em] text-white/45" style={{ fontFamily: "var(--font-mono)" }}>
-                  …and <span className="text-[#D6FF3F]">100+ more happy customers</span> — and counting.
-                </p>
+                <p className="text-[12px] uppercase tracking-[0.2em] text-white/45" style={{ fontFamily: "var(--font-mono)" }}>…and <span className="text-[#D6FF3F]">100+ more happy customers</span> — and counting.</p>
               </div>
             </div>
           </Reveal>
@@ -1546,34 +1309,12 @@ export default function Home() {
       {/* 6. CONTACT / CTA */}
       <section id="contact" className="relative z-10 border-t border-white/[0.06] px-6 py-32 md:px-10 overflow-hidden">
         <div className="relative mx-auto max-w-7xl">
-          <Reveal>
-            <p className="mb-6 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>
-              Let&apos;s talk
-            </p>
-          </Reveal>
-          <Reveal delay={80}>
-            <h2 className="max-w-3xl text-4xl leading-[1.05] sm:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-              Let&apos;s build something
-              <br />
-              no one&apos;s seen yet.
-            </h2>
-          </Reveal>
+          <Reveal><p className="mb-6 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>Let&apos;s talk</p></Reveal>
+          <Reveal delay={80}><h2 className="max-w-3xl text-4xl leading-[1.05] sm:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>Let&apos;s build something<br />no one&apos;s seen yet.</h2></Reveal>
           <Reveal delay={160}>
             <div className="mt-12 flex flex-wrap items-center gap-6">
-              <a
-                href="mailto:veyracreativesdigitallab25@gmail.com"
-                className="rounded-full bg-[#D6FF3F] px-7 py-4 text-sm font-medium text-black transition-all duration-300 hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(214,255,63,0.3)]"
-              >
-                veyracreativesdigitallab25@gmail.com
-              </a>
-              <a
-                href="https://wa.me/918928246726?text=Hi%20Veyra!%20I%27d%20love%20to%20start%20a%20project."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full border border-white/20 px-7 py-4 text-sm text-white/85 transition-all duration-300 hover:border-[#25D366]/70 hover:text-white hover:scale-105"
-              >
-                Chat Right now!
-              </a>
+              <a href="mailto:veyracreativesdigitallab25@gmail.com" className="rounded-full bg-[#D6FF3F] px-7 py-4 text-sm font-medium text-black transition-all duration-300 hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(214,255,63,0.3)]">veyracreativesdigitallab25@gmail.com</a>
+              <a href="https://wa.me/918928246726?text=Hi%20Veyra!%20I%27d%20love%20to%20start%20a%20project." target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/20 px-7 py-4 text-sm text-white/85 transition-all duration-300 hover:border-[#25D366]/70 hover:text-white hover:scale-105">Chat Right now!</a>
             </div>
           </Reveal>
         </div>
@@ -1585,76 +1326,21 @@ export default function Home() {
       {/* 8. MEET THE FOUNDERS — intro */}
       <section className="relative z-10 overflow-hidden border-t border-white/[0.06] px-6 py-28 md:px-10">
         <div className="relative mx-auto max-w-7xl">
-          <Reveal>
-            <p className="mb-5 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
-              Meet the lab
-            </p>
-          </Reveal>
-          <Reveal delay={80}>
-            <h2 className="max-w-3xl text-4xl leading-[1.02] sm:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-              Two founders. One{" "}
-              <span className="bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] bg-clip-text text-transparent">obsession.</span>
-            </h2>
-          </Reveal>
-          <Reveal delay={160}>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-white/55 sm:text-lg">
-              The people behind the pixels and the performance — strategy and craft, sitting at the same table.
-            </p>
-          </Reveal>
+          <Reveal><p className="mb-5 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>Meet the lab</p></Reveal>
+          <Reveal delay={80}><h2 className="max-w-3xl text-4xl leading-[1.02] sm:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>Two founders. One <span className="bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] bg-clip-text text-transparent">obsession.</span></h2></Reveal>
+          <Reveal delay={160}><p className="mt-6 max-w-xl text-base leading-relaxed text-white/55 sm:text-lg">The people behind the pixels and the performance — strategy and craft, sitting at the same table.</p></Reveal>
         </div>
       </section>
 
       {/* 9. FOUNDER */}
-      <PortraitCard
-        accent="lime"
-        side="left"
-        eyebrow="The founder"
-        indexLabel="Founder — Veyra Lab"
-        name="Rutvi"
-        role="Founder & Creative Director"
-        imgSrc="/founder.jpg"
-        imgAlt="Veyra founder portrait"
-        objectPosition="center 28%"
-        glyphs={founderGlyphs}
-        bio="Started Veyra with a stubborn belief: that brands deserve more than templates and guesswork. Rutvi leads the studio's creative vision — translating messy ambitions into identities, products, and campaigns that actually move numbers. Part strategist, part art director, fully obsessed with the details most people scroll past."
-        tags={["Vision", "Brand Strategy", "Creative Direction", "Storytelling"]}
-        skills={founderSkills}
-        quote="We're not here to make pretty things. We're here to make pretty things that pay the rent."
-        socials={[
-          { l: "LinkedIn", h: "#" },
-          { l: "Twitter", h: "#" },
-          { l: "Email", h: "mailto:veyracreativesdigitallab@gmail.com" },
-        ]}
-      />
+      <PortraitCard accent="lime" side="left" eyebrow="The founder" indexLabel="Founder — Veyra Lab" name="Rutvi" role="Founder & Creative Director" imgSrc="/founder.jpg" imgAlt="Veyra founder portrait" objectPosition="center 28%" glyphs={founderGlyphs} bio="Started Veyra with a stubborn belief: that brands deserve more than templates and guesswork. Rutvi leads the studio's creative vision — translating messy ambitions into identities, products, and campaigns that actually move numbers. Part strategist, part art director, fully obsessed with the details most people scroll past." tags={["Vision", "Brand Strategy", "Creative Direction", "Storytelling"]} skills={founderSkills} quote="We're not here to make pretty things. We're here to make pretty things that pay the rent." socials={[{ l: "LinkedIn", h: "#" }, { l: "Twitter", h: "#" }, { l: "Email", h: "mailto:veyracreativesdigitallab@gmail.com" }]} />
 
       {/* 10. CO-FOUNDER */}
-      <PortraitCard
-        accent="purple"
-        side="right"
-        eyebrow="The co-founder"
-        indexLabel="Co-Founder — Design Lead"
-        name="Dibesh"
-        role="Co-Founder & Design Lead"
-        imgSrc="/cofounder.jpg"
-        imgAlt="Veyra co-founder portrait"
-        objectPosition="center 30%"
-        glyphs={cofounderGlyphs}
-        bio="The hand behind every interface that leaves the studio. Dibesh turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable."
-        tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]}
-        skills={cofounderSkills}
-        quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like."
-        socials={[
-          { l: "Instagram", h: "#" },
-          { l: "Behance", h: "#" },
-          { l: "Dribbble", h: "#" },
-        ]}
-      />
+      <PortraitCard accent="purple" side="right" eyebrow="The co-founder" indexLabel="Co-Founder — Design Lead" name="Dibesh" role="Co-Founder & Design Lead" imgSrc="/cofounder.jpg" imgAlt="Veyra co-founder portrait" objectPosition="center 30%" glyphs={cofounderGlyphs} bio="The hand behind every interface that leaves the studio. Dibesh turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable." tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]} skills={cofounderSkills} quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like." socials={[{ l: "Instagram", h: "#" }, { l: "Behance", h: "#" }, { l: "Dribbble", h: "#" }]} />
 
-      {/* 11. MANIFESTO */}
+      {/* 11. MANIFESTO / VINE SCROLL (300 images, small framed card + slow text inside) */}
       <ManifestoSection />
-      <ScrollAgain />
 
-      {/* keyframes */}
       <style jsx global>{`
         .veyra-shimmer {
           background: linear-gradient(100deg, #f5f3ee 0%, #d6ff3f 25%, #8b7cf6 50%, #f5f3ee 75%, #d6ff3f 100%);
@@ -1668,46 +1354,30 @@ export default function Home() {
           0% { background-position: 0% 50%; }
           100% { background-position: 300% 50%; }
         }
-
-        .float-slow {
-          animation: veyra-float 5s ease-in-out infinite;
-        }
+        .float-slow { animation: veyra-float 5s ease-in-out infinite; }
         @keyframes veyra-float {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
         }
-
-        .scan-line {
-          animation: veyra-scan 4.5s ease-in-out infinite;
-        }
+        .scan-line { animation: veyra-scan 4.5s ease-in-out infinite; }
         @keyframes veyra-scan {
           0% { transform: translateY(-120%); opacity: 0; }
           15% { opacity: 1; }
           85% { opacity: 1; }
           100% { transform: translateY(520%); opacity: 0; }
         }
-
-        .aura-blob {
-          animation: veyra-aura 9s ease-in-out infinite;
-        }
-        .aura-blob-2 {
-          animation-delay: -4.5s;
-        }
+        .aura-blob { animation: veyra-aura 9s ease-in-out infinite; }
+        .aura-blob-2 { animation-delay: -4.5s; }
         @keyframes veyra-aura {
           0%, 100% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(12px, -10px) scale(1.08); }
         }
-
         .grain {
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
           mix-blend-mode: overlay;
           opacity: 0.16;
         }
-
-        .scale-115 {
-          transform: scale(1.15);
-        }
-
+        .scale-115 { transform: scale(1.15); }
         @media (prefers-reduced-motion: reduce) {
           .veyra-shimmer { animation: none; background-position: 0% 50%; }
           .float-slow, .scan-line, .aura-blob { animation: none; }
