@@ -18,14 +18,14 @@ export default function Header() {
           className="group flex items-center select-none"
           onClick={closeMenu}
         >
-          {/* 2:1 frame crops the square's top/bottom white margin → horizontal logo plate */}
-          <span className="relative block h-9 aspect-[2/1] overflow-hidden sm:h-10">
+          {/* wider frame + taller → the wordmark fills the space, transparent padding cropped away */}
+          <span className="relative block h-13 aspect-[5/2] overflow-hidden sm:h-15">
             <Image
               src="/veyra_logo.png"
               alt="Veyra"
               fill
               priority
-              sizes="96px"
+              sizes="140px"
               className="object-cover object-center transition-opacity duration-300 group-hover:opacity-80"
             />
           </span>
