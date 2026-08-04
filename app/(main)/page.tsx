@@ -6,6 +6,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import ScrollParallax from "@/app/components/ScrollParallax";
 import RevealBlock from "@/app/components/Reveal";
+import MobileExtend from "@/app/components/mobileextend";
+
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -1342,10 +1345,32 @@ function ManifestoSection() {
   return <BottomScrollSequence />;
 }
 
+/* ─── Mobile detection hook ─────────────────────────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  
+  return isMobile;
+}
+
 /* ═══════════════════════════════════════════════════════
    HOME PAGE
    ═══════════════════════════════════════════════════════ */
 export default function Home() {
+  const isMobile = useIsMobile();
+
+  // If mobile, render the mobile-optimized version
+  if (isMobile) {
+    return <MobileExtend />;
+  }
+
+  // Otherwise, render the full desktop version with scroll animations
   return (
     <main className="relative">
       <AmbientTypeField />
@@ -1507,6 +1532,7 @@ export default function Home() {
 
       {/* 11. MANIFESTO / VINE SCROLL (300 images, small framed card + slow text inside) */}
       <ManifestoSection />
+
 
       <style jsx global>{`
         .veyra-shimmer {
