@@ -606,7 +606,7 @@ function AmbientTypeField() {
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 const ramp = (p: number, start: number, end: number) => clamp01((p - start) / (end - start));
 
-/* ─── CINEMATIC HERO — scroll-driven text reveal + enquiry form ──────────── */
+/* ─── CINEMATIC HERO — scroll-driven text reveal ──────────── */
 const HERO_WORDS = ["STRATEGY", "DESIGN", "GROWTH", "VEYRA"];
 
 const HERO_SHAPES: { char: string; color: string; size: number; top: string; left: string; speed: number; delay: string }[] = [
@@ -625,10 +625,6 @@ function CinematicHero() {
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const orbRef = useRef<HTMLDivElement>(null);
   const shapeRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const formCardRef = useRef<HTMLDivElement>(null);
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
-  const [formStatus, setFormStatus] = useState<"idle" | "sending" | "sent">("idle");
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   /* scroll-driven choreography */
   useEffect(() => {
@@ -673,13 +669,6 @@ function CinematicHero() {
         el.style.transform = `translate3d(${sway}px, ${drift}px, 0) rotate(${raw * 360 * (i % 2 === 0 ? 1 : -1)}deg)`;
         el.style.opacity = String(0.12 + raw * 0.25);
       });
-
-      /* form card reveal */
-      if (formCardRef.current) {
-        const formT = clamp01((raw - 0.35) / 0.3);
-        formCardRef.current.style.opacity = String(formT);
-        formCardRef.current.style.transform = `translateY(${(1 - formT) * 60}px)`;
-      }
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -687,32 +676,12 @@ function CinematicHero() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormStatus("sending");
-    const msg = `Hi Veyra!\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nMessage: ${formData.message}`;
-    const waUrl = `https://wa.me/918928246726?text=${encodeURIComponent(msg)}`;
-    setTimeout(() => {
-      window.open(waUrl, "_blank");
-      setFormStatus("sent");
-      setTimeout(() => setFormStatus("idle"), 3000);
-    }, 600);
-  };
-
-  const inputBase = "w-full rounded-xl border bg-white/[0.03] px-4 py-3.5 text-sm text-[#F5F3EE] placeholder:text-white/25 outline-none backdrop-blur-sm transition-all duration-300";
-  const inputFocus = (field: string) =>
-    focusedField === field
-      ? "border-[#D6FF3F]/60 shadow-[0_0_24px_rgba(214,255,63,0.12)]"
-      : "border-white/10 hover:border-white/20";
-
   return (
     <section
       ref={sectionRef}
       className="relative z-10 w-full"
       style={{ height: "420vh" }}
     >
-      {/* NOTE: no more flex/items-center here — centering moved to the wrapper below
-          so an overflowing mobile stack pins below the header instead of under it */}
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#0B0D12] px-5 sm:px-8 lg:px-14">
         {/* morphing gradient orb */}
         <div
@@ -752,132 +721,34 @@ function CinematicHero() {
           </span>
         ))}
 
-        {/* ─── CENTERING WRAPPER ─────────────────────────────────────────
-            min-h-full + place-items-center = centered when it fits;
-            pt-28 on mobile reserves the header height so the top word can
-            never slide under the fixed header; lg:pt-0 keeps desktop as-is. ─── */}
+        {/* ─── CENTERING WRAPPER ───────────────────────────────────────── */}
         <div className="relative z-10 grid min-h-full w-full place-items-center pt-28 pb-16 lg:pt-0 lg:pb-0">
-          {/* ─── SPLIT LAYOUT: words left, form right on lg ─── */}
-          <div className="relative z-10 grid w-full max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
-            {/* LEFT: scroll-revealing words */}
-            <div className="flex flex-col items-center gap-2 sm:gap-3 lg:items-start" style={{ perspective: "1200px" }}>
-              {HERO_WORDS.map((word, i) => (
-                <span
-                  key={word}
-                  ref={(el) => { wordRefs.current[i] = el; }}
-                  className="block select-none text-center lg:text-left"
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 700,
-                    fontSize: "clamp(2.8rem, 10vw, 8rem)",
-                    lineHeight: 0.95,
-                    letterSpacing: "-0.03em",
-                    opacity: 0,
-                    willChange: "transform, opacity, filter",
-                    transformStyle: "preserve-3d",
-                  }}
-                >
-                  {word}
-                </span>
-              ))}
-              <p
-                className="mt-6 max-w-md text-center text-sm leading-relaxed text-white/40 sm:text-base lg:text-left"
-                style={{ fontFamily: "var(--font-body)" }}
+          <div className="flex flex-col items-center gap-2 sm:gap-3" style={{ perspective: "1200px" }}>
+            {HERO_WORDS.map((word, i) => (
+              <span
+                key={word}
+                ref={(el) => { wordRefs.current[i] = el; }}
+                className="block select-none text-center"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  fontSize: "clamp(2.8rem, 12vw, 10rem)",
+                  lineHeight: 0.95,
+                  letterSpacing: "-0.03em",
+                  opacity: 0,
+                  willChange: "transform, opacity, filter",
+                  transformStyle: "preserve-3d",
+                }}
               >
-                A creative &amp; digital lab obsessed with building brands that move.
-              </p>
-            </div>
-
-            {/* RIGHT: enquiry form */}
-            <div
-              ref={formCardRef}
-              className="relative w-full max-w-lg justify-self-center lg:justify-self-end"
-              style={{ opacity: 0, transform: "translateY(60px)" }}
+                {word}
+              </span>
+            ))}
+            <p
+              className="mt-8 max-w-md text-center text-sm leading-relaxed text-white/40 sm:text-base"
+              style={{ fontFamily: "var(--font-body)" }}
             >
-              <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/70 p-6 shadow-[0_32px_120px_-20px_rgba(139,124,246,0.2)] backdrop-blur-xl sm:p-8">
-                {/* corner accents */}
-                <span className="absolute left-0 top-0 h-12 w-[2px] bg-gradient-to-b from-[#D6FF3F]/60 to-transparent" />
-                <span className="absolute left-0 top-0 h-[2px] w-12 bg-gradient-to-r from-[#D6FF3F]/60 to-transparent" />
-                <span className="absolute bottom-0 right-0 h-12 w-[2px] bg-gradient-to-t from-[#8B7CF6]/60 to-transparent" />
-                <span className="absolute bottom-0 right-0 h-[2px] w-12 bg-gradient-to-l from-[#8B7CF6]/60 to-transparent" />
-
-                <div className="mb-5 flex items-center gap-3">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-[#D6FF3F]/80" style={{ fontFamily: "var(--font-mono)" }}>
-                    Start a conversation
-                  </p>
-                </div>
-                <h3 className="mb-1 text-2xl sm:text-3xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-                  Got a vision?
-                </h3>
-                <p className="mb-5 text-sm text-white/45">
-                  Tell us about your project and we&apos;ll get back within 24 hours.
-                </p>
-
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-                      onFocus={() => setFocusedField("name")}
-                      onBlur={() => setFocusedField(null)}
-                      className={`${inputBase} ${inputFocus("name")}`}
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email address"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
-                      onFocus={() => setFocusedField("email")}
-                      onBlur={() => setFocusedField(null)}
-                      className={`${inputBase} ${inputFocus("email")}`}
-                    />
-                  </div>
-                  <input
-                    type="tel"
-                    placeholder="Phone number"
-                    value={formData.phone}
-                    onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
-                    onFocus={() => setFocusedField("phone")}
-                    onBlur={() => setFocusedField(null)}
-                    className={`${inputBase} ${inputFocus("phone")}`}
-                  />
-                  <textarea
-                    rows={3}
-                    placeholder="Tell us about your project…"
-                    required
-                    value={formData.message}
-                    onChange={(e) => setFormData((p) => ({ ...p, message: e.target.value }))}
-                    onFocus={() => setFocusedField("message")}
-                    onBlur={() => setFocusedField(null)}
-                    className={`${inputBase} ${inputFocus("message")} resize-none`}
-                  />
-                  <button
-                    type="submit"
-                    disabled={formStatus === "sending"}
-                    className="group relative w-full overflow-hidden rounded-xl bg-[#D6FF3F] px-6 py-3.5 text-sm font-semibold text-[#0B0D12] transition-all duration-300 hover:shadow-[0_0_40px_rgba(214,255,63,0.3)] hover:scale-[1.02] disabled:opacity-60"
-                  >
-                    <span className="relative z-10">
-                      {formStatus === "idle" && "Send Enquiry →"}
-                      {formStatus === "sending" && "Opening WhatsApp…"}
-                      {formStatus === "sent" && "✓ Sent!"}
-                    </span>
-                    <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                  </button>
-                </form>
-
-                <p className="mt-3 text-center text-[10px] text-white/25" style={{ fontFamily: "var(--font-mono)" }}>
-                  or email us at{" "}
-                  <a href="mailto:veyracreativesdigitallab25@gmail.com" className="text-[#8B7CF6]/60 underline underline-offset-2 transition hover:text-[#8B7CF6]">
-                    veyracreativesdigitallab25@gmail.com
-                  </a>
-                </p>
-              </div>
-            </div>
+              A creative &amp; digital lab obsessed with building brands that move.
+            </p>
           </div>
         </div>
         {/* ─── /CENTERING WRAPPER ─── */}
@@ -1368,7 +1239,7 @@ export default function Home() {
       <AmbientTypeField />
       <ScrollProgress />
 
-      {/* 1. CINEMATIC HERO — scroll-driven text reveal + enquiry */}
+      {/* 1. CINEMATIC HERO — scroll-driven text reveal */}
       <CinematicHero />
 
       {/* 2. HERO */}
