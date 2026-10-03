@@ -1016,9 +1016,24 @@ export default function AboutPage() {
       const sections = gsap.utils.toArray<HTMLElement>(".story-panel-section");
 
       sections.forEach((section) => {
-        const panel = section.querySelector(".story-panel");
+        const panel = section.querySelector<HTMLElement>(".story-panel");
         const wrapper = section.querySelector(".panel-content-wrapper");
         const isLeft = section.dataset.position === "left";
+
+        /* How far the panel slides in from the side. Desktop leaves ~80px of
+           margin to travel through, but the panel is capped at max-w-7xl and
+           goes nearly edge-to-edge on smaller screens — so a fixed 80px push
+           drags it past the viewport, makes the whole document horizontally
+           scrollable, and leaves a black gap beside the page when you scroll
+           sideways. Derive the distance from the margin that actually exists
+           rather than guessing a breakpoint. Function-based so ScrollTrigger
+           re-reads it on resize instead of freezing the first-load value. */
+        const slideX = () => {
+          // offsetWidth is the untransformed layout width, so this can't be
+          // skewed by the very transform we're calculating.
+          const margin = (window.innerWidth - (panel?.offsetWidth ?? 0)) / 2;
+          return Math.max(0, Math.min(80, margin - 4));
+        };
 
         if (wrapper) {
           gsap.fromTo(
@@ -1041,7 +1056,7 @@ export default function AboutPage() {
           gsap.fromTo(
             panel,
             {
-              x: isLeft ? -80 : 80,
+              x: () => (isLeft ? -slideX() : slideX()),
               opacity: 0,
               scale: 0.97,
             },
