@@ -93,6 +93,34 @@ body {
   90%      { transform: translate(-1%, -1%); }
 }
 
+/* ─── Client logo marquee ───
+   The track holds two identical copies of the logo list, so translating by
+   exactly -50% lands copy 2 precisely where copy 1 started. That's what makes
+   the loop seamless — no snap, no visible gap. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 38s) linear infinite;
+  will-change: transform;
+}
+
+/* Pause while the pointer is over the strip, so a visitor can actually stop to
+   read a logo. Declared here rather than as a Tailwind `hover:` utility on
+   purpose: this rule is unlayered, and unlayered declarations outrank every
+   layered one regardless of specificity — so the utility would lose and the
+   strip could never be paused. Higher specificity plus later source order
+   settles it cleanly. */
+.logo-marquee:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+}
+
 /* Scroll progress bar at top of page */
 .scroll-progress {
   position: fixed;

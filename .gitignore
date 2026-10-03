@@ -30,8 +30,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — real ones stay out of git
 .env*
+# ...but the committed template must not be swallowed by the rule above
+!.env.example
+!.env.local.example
 
 # vercel
 .vercel

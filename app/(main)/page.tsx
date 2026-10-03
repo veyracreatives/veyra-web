@@ -8,6 +8,9 @@ import { useGSAP } from "@gsap/react";
 import ScrollParallax from "@/app/components/ScrollParallax";
 import RevealBlock from "@/app/components/Reveal";
 import MobileExtend from "@/app/components/mobileextend";
+import LogoMarquee from "@/app/components/LogoMarquee";
+import { useSiteContent } from "@/app/components/useSiteContent";
+import { whatsappLink, type SiteContent } from "@/lib/site-content";
 
 
 
@@ -622,7 +625,7 @@ const HERO_SHAPES: { char: string; color: string; size: number; top: string; lef
   { char: "■", color: OFFWHITE,size: 16, top: "55%", left: "18%",  speed: 1.0,  delay: "0.3s" },
 ];
 
-function CinematicHero() {
+function CinematicHero({ content }: { content: SiteContent }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const orbRef = useRef<HTMLDivElement>(null);
@@ -685,7 +688,7 @@ function CinematicHero() {
     e.preventDefault();
     setFormStatus("sending");
     const msg = `Hi Veyra!\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nMessage: ${formData.message}`;
-    const waUrl = `https://wa.me/918928246726?text=${encodeURIComponent(msg)}`;
+    const waUrl = whatsappLink(content.whatsappNumber, msg);
     setTimeout(() => {
       window.open(waUrl, "_blank");
       setFormStatus("sent");
@@ -857,8 +860,8 @@ function CinematicHero() {
 
                 <p className="mt-3 text-center text-[10px] text-white/25" style={{ fontFamily: "var(--font-mono)" }}>
                   or email us at{" "}
-                  <a href="mailto:veyracreativesdigitallab25@gmail.com" className="text-[#8B7CF6]/60 underline underline-offset-2 transition hover:text-[#8B7CF6]">
-                    veyracreativesdigitallab25@gmail.com
+                  <a href={`mailto:${content.contactEmail}`} className="text-[#8B7CF6]/60 underline underline-offset-2 transition hover:text-[#8B7CF6]">
+                    {content.contactEmail}
                   </a>
                 </p>
               </div>
@@ -1093,14 +1096,8 @@ const capabilities = [
   { tag: "Product", title: "Web & Product Design", desc: "Interfaces and sites that feel inevitable — fast, considered, and built to convert.", icon: "■" },
 ];
 
-const work = [
-  { tag: "Local SEO", title: "Google Business Profile", metric: "+210% map views", desc: "Listings tuned for the map pack — more calls, more directions, more walk-ins.", img: "/work/googlebusiness_profile.png", gradient: "from-[#D6FF3F]/40 to-[#8B7CF6]/20" },
-  { tag: "Paid Media", title: "Performance Marketing", metric: "3.4× ROAS", desc: "Paid funnels built like lab experiments: hypothesis, test, scale, repeat.", img: "/work/performance_marketing.png", gradient: "from-[#8B7CF6]/40 to-[#D6FF3F]/20" },
-  { tag: "Production", title: "Shooting Videos", metric: "40+ shoots / mo", desc: "Scroll-stopping short-form and brand films — shot, lit, and cut in-house.", img: "/work/Shooting.png", gradient: "from-[#D6FF3F]/30 to-[#8B7CF6]/30" },
-  { tag: "Always-on", title: "Social Media Management", metric: "12M organic reach", desc: "Calendars, community, and content that keep the brand alive between launches.", img: "/work/socialmedia_management.png", gradient: "from-[#8B7CF6]/30 to-[#D6FF3F]/30" },
-  { tag: "Organic", title: "Website SEO", metric: "+180% organic traffic", desc: "Technical + on-page SEO engineered to compound quietly, month over month.", img: "/work/Website_seo.png", gradient: "from-[#D6FF3F]/40 to-[#8B7CF6]/10" },
-  { tag: "Full-funnel", title: "Performance + Content", metric: "−38% cost per lead", desc: "Creative that performs — ads and content tuned to the same north-star metric.", img: "/work/performance_marketing_content.png", gradient: "from-[#8B7CF6]/40 to-[#D6FF3F]/10" },
-];
+/* The "Selected work" cards come from lib/site-content.ts (DEFAULT_CONTENT) and
+   are overridable from /admin_veyra — don't re-declare them here. */
 
 const workStats = [
   { value: "250+", label: "Projects shipped" },
@@ -1143,10 +1140,13 @@ function useIsMobile() {
    ═══════════════════════════════════════════════════════ */
 export default function Home() {
   const isMobile = useIsMobile();
+  const content = useSiteContent();
 
-  // If mobile, render the mobile-optimized version
+  // If mobile, render the mobile-optimized version.
+  // The content is fetched once here and handed down, so the mobile branch
+  // doesn't fire a second identical request.
   if (isMobile) {
-    return <MobileExtend />;
+    return <MobileExtend content={content} />;
   }
 
   // Otherwise, render the full desktop version with scroll animations
@@ -1156,9 +1156,12 @@ export default function Home() {
       <ScrollProgress />
 
       {/* 1. CINEMATIC HERO — scroll-driven text reveal + static form */}
-      <CinematicHero />
+      <CinematicHero content={content} />
 
-      {/* 2. HERO */}
+      {/* 2. CLIENT LOGOS — auto-scrolling marquee; renders nothing when empty */}
+      <LogoMarquee logos={content.logos} />
+
+      {/* 3. HERO */}
       <section className="relative z-10 flex min-h-[88vh] items-center overflow-hidden border-t border-white/[0.06] px-6 md:px-10">
         <div className="relative mx-auto w-full max-w-7xl">
           <div className="max-w-3xl">
@@ -1181,7 +1184,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. PHILOSOPHY */}
+      {/* 4. PHILOSOPHY */}
       <section className="relative z-10 border-t border-white/[0.06] px-6 py-36 md:px-10 md:py-44">
         <div className="relative mx-auto max-w-5xl">
           <Reveal><p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>Our philosophy</p></Reveal>
@@ -1203,7 +1206,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. CAPABILITIES */}
+      {/* 5. CAPABILITIES */}
       <section id="capabilities" className="relative z-10 border-t border-white/[0.06] px-6 py-32 md:px-10">
         <div className="relative mx-auto max-w-7xl">
           <Reveal><p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>What we build</p></Reveal>
@@ -1228,7 +1231,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. SELECTED WORK */}
+      {/* 6. SELECTED WORK */}
       <section id="work" className="relative z-10 border-t border-white/[0.06] px-6 py-32 md:px-10">
         <div className="relative mx-auto max-w-7xl">
           <div className="mb-16 flex flex-wrap items-end justify-between gap-6">
@@ -1239,8 +1242,8 @@ export default function Home() {
             <Reveal delay={120}><a href="#contact" className="whitespace-nowrap text-sm text-white/60 underline underline-offset-4 transition hover:text-white">View all case studies →</a></Reveal>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {work.map((w, i) => (
-              <Reveal key={w.title} delay={i * 90}>
+            {content.work.map((w, i) => (
+              <Reveal key={w.id} delay={i * 90}>
                 <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/80 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-white/[0.15]">
                   <div className="relative aspect-[4/3] w-full overflow-hidden">
                     <img src={w.img} alt={w.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
@@ -1277,24 +1280,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. CONTACT / CTA */}
+      {/* 7. CONTACT / CTA */}
       <section id="contact" className="relative z-10 border-t border-white/[0.06] px-6 py-32 md:px-10 overflow-hidden">
         <div className="relative mx-auto max-w-7xl">
           <Reveal><p className="mb-6 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>Let&apos;s talk</p></Reveal>
           <Reveal delay={80}><h2 className="max-w-3xl text-4xl leading-[1.05] sm:text-6xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>Let&apos;s build something<br />no one&apos;s seen yet.</h2></Reveal>
           <Reveal delay={160}>
             <div className="mt-12 flex flex-wrap items-center gap-6">
-              <a href="mailto:veyracreativesdigitallab25@gmail.com" className="rounded-full bg-[#D6FF3F] px-7 py-4 text-sm font-medium text-black transition-all duration-300 hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(214,255,63,0.3)]">veyracreativesdigitallab25@gmail.com</a>
-              <a href="https://wa.me/918928246726?text=Hi%20Veyra!%20I%27d%20love%20to%20start%20a%20project." target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/20 px-7 py-4 text-sm text-white/85 transition-all duration-300 hover:border-[#25D366]/70 hover:text-white hover:scale-105">Chat Right now!</a>
+              <a href={`mailto:${content.contactEmail}`} className="rounded-full bg-[#D6FF3F] px-7 py-4 text-sm font-medium text-black transition-all duration-300 hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(214,255,63,0.3)]">{content.contactEmail}</a>
+              <a href={whatsappLink(content.whatsappNumber, "Hi Veyra! I'd love to start a project.")} target="_blank" rel="noopener noreferrer" className="rounded-full border border-white/20 px-7 py-4 text-sm text-white/85 transition-all duration-300 hover:border-[#25D366]/70 hover:text-white hover:scale-105">Chat Right now!</a>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* 7. SPLINE SHOWPIECE */}
+      {/* 8. SPLINE SHOWPIECE */}
       <SplineShowpiece />
 
-      {/* 8. MEET THE FOUNDERS — intro */}
+      {/* 9. MEET THE FOUNDERS — intro */}
       <section className="relative z-10 overflow-hidden border-t border-white/[0.06] px-6 py-28 md:px-10">
         <div className="relative mx-auto max-w-7xl">
           <Reveal><p className="mb-5 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>Meet the lab</p></Reveal>
@@ -1303,13 +1306,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. FOUNDER */}
+      {/* 10. FOUNDER */}
       <PortraitCard accent="lime" side="left" eyebrow="The founder" indexLabel="Founder — Veyra Lab" name="Rutvi Karad" role="Founder & Creative Director" imgSrc="/founder.jpg" imgAlt="Veyra founder portrait" objectPosition="center 28%" glyphs={founderGlyphs} bio="Started Veyra with a stubborn belief: that brands deserve more than templates and guesswork. Rutvi leads the studio's creative vision — translating messy ambitions into identities, products, and campaigns that actually move numbers. Part strategist, part art director, fully obsessed with the details most people scroll past." tags={["Vision", "Brand Strategy", "Creative Direction", "Storytelling"]} skills={founderSkills} quote="We're not here to make pretty things. We're here to make pretty things that pay the rent." socials={[{ l: "LinkedIn", h: "https://www.linkedin.com/company/veyracreativesanddigitallab/" }, { l: "Email", h: "mailto:veyracreativesdigitallab@gmail.com" }]} />
 
-      {/* 10. CO-FOUNDER */}
+      {/* 11. CO-FOUNDER */}
       <PortraitCard accent="purple" side="right" eyebrow="The co-founder" indexLabel="Co-Founder — Design Lead" name="Dibesh Dinesan" role="Co-Founder & Design Lead" imgSrc="/cofounder.jpg" imgAlt="Veyra co-founder portrait" objectPosition="center 30%" glyphs={cofounderGlyphs} bio="The hand behind every interface that leaves the studio. Dibesh Dinesan turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable." tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]} skills={cofounderSkills} quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like." socials={[{ l: "Instagram", h: "#" }, { l: "Behance", h: "#" }, { l: "Dribbble", h: "#" }]} />
 
-      {/* 11. MANIFESTO / VINE SCROLL (300 images, small framed card + slow text inside) */}
+      {/* 12. MANIFESTO / GROWTH HELIX (procedural 3D scroll sequence) */}
       <ManifestoSection />
 
 
