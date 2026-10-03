@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -220,7 +221,6 @@ const FIELD_WORDS: WordConfig[] = [
 
 const pad4 = (n: number) => String(Math.abs(Math.round(n)) % 10000).padStart(4, "0");
 const pad3 = (n: number) => String(Math.abs(Math.round(n)) % 1000).padStart(3, "0");
-const padFrame = (n: number) => String(n).padStart(3, "0");
 
 function AmbientTypeField() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -607,7 +607,6 @@ function AmbientTypeField() {
 
 /* ─── helpers for scroll choreography ────────────────── */
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
-const ramp = (p: number, start: number, end: number) => clamp01((p - start) / (end - start));
 
 /* ─── CINEMATIC HERO — scroll-driven text reveal + static form ──────────── */
 const HERO_WORDS = ["STRATEGY", "DESIGN", "GROWTH", "VEYRA"];
@@ -890,230 +889,6 @@ function CinematicHero() {
   );
 }
 
-/* ─── BOTTOM / VINE Scroll Sequence (300 images) — SMALL FRAMED CARD + SLOW TEXT INSIDE ─────────────── */
-const BOTTOM_FRAME_COUNT = 300;
-const BOTTOM_FRAME_PREFIX = "ezgif-frame-";
-const BOTTOM_FRAME_EXT = ".jpg";
-
-function BottomScrollSequence() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagesRef = useRef<HTMLImageElement[]>([]);
-  const frameRef = useRef(0);
-  const rafRef = useRef<number>(0);
-
-  // scroll-choreographed text overlays (positioned INSIDE the framed card)
-  const topRightRef = useRef<HTMLDivElement>(null);
-  const bottomRightRef = useRef<HTMLDivElement>(null);
-  const hintRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
-
-  const [loadedCount, setLoadedCount] = useState(0);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const imgs: HTMLImageElement[] = [];
-    let loaded = 0;
-    for (let i = 1; i <= BOTTOM_FRAME_COUNT; i++) {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = `/veyra-seq/${BOTTOM_FRAME_PREFIX}${padFrame(i)}${BOTTOM_FRAME_EXT}`;
-      img.onload = () => {
-        loaded++;
-        setLoadedCount(loaded);
-        if (loaded === BOTTOM_FRAME_COUNT) setReady(true);
-      };
-      imgs.push(img);
-    }
-    imagesRef.current = imgs;
-  }, []);
-
-  const drawFrame = useCallback((index: number) => {
-    const canvas = canvasRef.current;
-    const img = imagesRef.current[index];
-    if (!canvas || !img || !img.complete) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    // High-DPI backing store for crispness; CSS keeps native size (no upscale)
-    const dpr = window.devicePixelRatio || 1;
-    const targetWidth = Math.floor(img.naturalWidth * dpr);
-    const targetHeight = Math.floor(img.naturalHeight * dpr);
-    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-    }
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    const onScroll = () => {
-      const container = containerRef.current;
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const scrollableHeight = rect.height - window.innerHeight;
-      if (scrollableHeight <= 0) return;
-      const clamped = clamp01(-rect.top / scrollableHeight);
-
-      // 1) frame playback (vine grows horizontally)
-      const targetFrame = Math.min(Math.round(clamped * (BOTTOM_FRAME_COUNT - 1)), BOTTOM_FRAME_COUNT - 1);
-      if (targetFrame !== frameRef.current) {
-        frameRef.current = targetFrame;
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(() => drawFrame(targetFrame));
-      }
-
-      // 2) top-right copy — reveals early (vine starts growing)
-      if (topRightRef.current) {
-        const t = ramp(clamped, 0.12, 0.34);
-        topRightRef.current.style.opacity = String(t);
-        topRightRef.current.style.transform = `translateY(${(1 - t) * 26}px)`;
-      }
-
-      // 3) bottom-right copy — reveals later (vine nearly full)
-      if (bottomRightRef.current) {
-        const t = ramp(clamped, 0.5, 0.74);
-        bottomRightRef.current.style.opacity = String(t);
-        bottomRightRef.current.style.transform = `translateY(${(1 - t) * 26}px)`;
-      }
-
-      // 4) scroll hint — fades out fast
-      if (hintRef.current) {
-        hintRef.current.style.opacity = String(clamp01(1 - clamped / 0.1));
-      }
-
-      // 5) bottom progress line — grows with the vine
-      if (progressRef.current) {
-        progressRef.current.style.transform = `scaleX(${clamped})`;
-      }
-    };
-    drawFrame(0);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", () => drawFrame(frameRef.current), { passive: true });
-    onScroll();
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", () => drawFrame(frameRef.current));
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [ready, drawFrame]);
-
-  const loadPercent = Math.round((loadedCount / BOTTOM_FRAME_COUNT) * 100);
-
-  return (
-    <section ref={containerRef} className="relative z-10 w-full bg-[#0B0D12]" style={{ height: `${BOTTOM_FRAME_COUNT * 1.2}vh` }}>
-      {/* center the small framed card in the viewport */}
-      <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden bg-[#0B0D12] p-4 sm:p-6">
-        {/* loader (full-screen centered) */}
-        {!ready && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-[#0B0D12]">
-            <div className="h-1 w-48 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-[#D6FF3F] transition-all duration-200" style={{ width: `${loadPercent}%` }} />
-            </div>
-            <p className="text-[12px] uppercase tracking-[0.25em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>
-              Loading sequence… {loadPercent}%
-            </p>
-          </div>
-        )}
-
-        {/* ── the framed card: shrink-wraps the canvas so the overlay matches it exactly ── */}
-        <div
-          className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10"
-          style={{ maxHeight: "80vh", maxWidth: "92vw", display: ready ? "block" : "none" }}
-        >
-          {/* native-size canvas → no upscaling → crisp */}
-          <canvas
-            ref={canvasRef}
-            className="block h-auto w-auto"
-            style={{ maxHeight: "80vh", maxWidth: "92vw" }}
-          />
-
-          {/* ── overlay layer — exactly the card's size ── */}
-          <div className="pointer-events-none absolute inset-0">
-            {/* legibility scrims (clipped to the rounded card) */}
-            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/45 via-black/10 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
-            <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-black/35 to-transparent" />
-
-            {/* editorial label, top-left */}
-            <div className="absolute left-4 top-4 sm:left-5 sm:top-5">
-              <p className="text-[9px] uppercase tracking-[0.3em] text-white/40 sm:text-[10px]" style={{ fontFamily: "var(--font-mono)" }}>
-                Veyra — seq. 02 / growth
-              </p>
-            </div>
-
-            {/* ── TOP-RIGHT copy block ─────────────────────────────── */}
-            <div
-              ref={topRightRef}
-              className="absolute right-4 top-[12%] max-w-[60%] text-right sm:right-6 sm:max-w-[15rem]"
-              style={{ opacity: 0, transform: "translateY(26px)" }}
-            >
-              <div className="mb-3 ml-auto h-px w-10 bg-gradient-to-l from-[#D6FF3F]/80 to-transparent" />
-              <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#D6FF3F] sm:text-[10px]" style={{ fontFamily: "var(--font-mono)" }}>
-                Growth, observed
-              </p>
-              <h2
-                className="text-lg leading-[1.08] text-white sm:text-2xl lg:text-3xl"
-                style={{ fontFamily: "var(--font-display)", fontWeight: 700, textShadow: "0 2px 24px rgba(0,0,0,0.6)" }}
-              >
-                We don&apos;t force it.
-                <br />
-                <span className="bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] bg-clip-text text-transparent">
-                  We grow it.
-                </span>
-              </h2>
-              <p className="mt-3 text-[10px] leading-relaxed text-white/75 sm:text-[12px]" style={{ textShadow: "0 1px 14px rgba(0,0,0,0.65)" }}>
-                Real brands behave like living things — they need the right soil,
-                light, and time. We tend the conditions until momentum takes root.
-              </p>
-            </div>
-
-            {/* ── BOTTOM-RIGHT copy block ──────────────────────────── */}
-            <div
-              ref={bottomRightRef}
-              className="absolute bottom-[12%] right-4 max-w-[60%] text-right sm:right-6 sm:max-w-[15rem]"
-              style={{ opacity: 0, transform: "translateY(26px)" }}
-            >
-              <blockquote className="text-[11px] italic leading-relaxed text-white/90 sm:text-sm" style={{ textShadow: "0 1px 14px rgba(0,0,0,0.65)" }}>
-                &ldquo;Every leaf on that vine is a decision we tested before we let
-                it grow.&rdquo;
-              </blockquote>
-              <div className="mt-3 flex items-center justify-end gap-2">
-                <span className="text-[9px] uppercase tracking-[0.25em] text-white/50 sm:text-[10px]" style={{ fontFamily: "var(--font-mono)" }}>
-                  Creative × Digital Lab
-                </span>
-                <span className="h-1.5 w-1.5 rounded-full bg-[#D6FF3F] animate-pulse" />
-              </div>
-              <a
-                href="#work"
-                className="pointer-events-auto mt-3 inline-block rounded-full border border-white/20 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm transition hover:border-[#D6FF3F]/70 hover:text-white"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                See the work →
-              </a>
-            </div>
-
-            {/* ── scroll hint (fades out) ──────────────────────────── */}
-            <div ref={hintRef} className="absolute bottom-4 left-1/2 -translate-x-1/2">
-              <div className="flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/45" style={{ fontFamily: "var(--font-mono)" }}>
-                Scroll to grow
-                <span className="h-6 w-px animate-pulse bg-white/40" />
-              </div>
-            </div>
-
-            {/* ── bottom progress line (grows with the vine) ───────── */}
-            <div className="absolute inset-x-0 bottom-0 h-[2px] bg-white/5">
-              <div ref={progressRef} className="h-full origin-left bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6]" style={{ transform: "scaleX(0)" }} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* ─── Spline showpiece ───────────────────────────────── */
 function SplineShowpiece() {
@@ -1340,9 +1115,13 @@ const philosophy = [
   { num: "03", text: "Great work outlives the campaign that launched it." },
 ];
 
-/* ─── Manifesto / Bottom Scroll Section ──────────────── */
+/* ─── Manifesto / Bottom Growth Sequence ─────────────────
+   Asset-free procedural 3D helix. Lazily code-split so its render loop
+   stays out of the initial bundle. ─────────────────────────────────────── */
+const GrowthHelix = dynamic(() => import("@/app/components/GrowthHelix"));
+
 function ManifestoSection() {
-  return <BottomScrollSequence />;
+  return <GrowthHelix />;
 }
 
 /* ─── Mobile detection hook ─────────────────────────── */
@@ -1528,7 +1307,7 @@ export default function Home() {
       <PortraitCard accent="lime" side="left" eyebrow="The founder" indexLabel="Founder — Veyra Lab" name="Rutvi Karad" role="Founder & Creative Director" imgSrc="/founder.jpg" imgAlt="Veyra founder portrait" objectPosition="center 28%" glyphs={founderGlyphs} bio="Started Veyra with a stubborn belief: that brands deserve more than templates and guesswork. Rutvi leads the studio's creative vision — translating messy ambitions into identities, products, and campaigns that actually move numbers. Part strategist, part art director, fully obsessed with the details most people scroll past." tags={["Vision", "Brand Strategy", "Creative Direction", "Storytelling"]} skills={founderSkills} quote="We're not here to make pretty things. We're here to make pretty things that pay the rent." socials={[{ l: "LinkedIn", h: "https://www.linkedin.com/company/veyracreativesanddigitallab/" }, { l: "Email", h: "mailto:veyracreativesdigitallab@gmail.com" }]} />
 
       {/* 10. CO-FOUNDER */}
-      <PortraitCard accent="purple" side="right" eyebrow="The co-founder" indexLabel="Co-Founder — Design Lead" name="Dibesh" role="Co-Founder & Design Lead" imgSrc="/cofounder.jpg" imgAlt="Veyra co-founder portrait" objectPosition="center 30%" glyphs={cofounderGlyphs} bio="The hand behind every interface that leaves the studio. Dibesh turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable." tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]} skills={cofounderSkills} quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like." socials={[{ l: "Instagram", h: "#" }, { l: "Behance", h: "#" }, { l: "Dribbble", h: "#" }]} />
+      <PortraitCard accent="purple" side="right" eyebrow="The co-founder" indexLabel="Co-Founder — Design Lead" name="Dibesh Dinesan" role="Co-Founder & Design Lead" imgSrc="/cofounder.jpg" imgAlt="Veyra co-founder portrait" objectPosition="center 30%" glyphs={cofounderGlyphs} bio="The hand behind every interface that leaves the studio. Dibesh Dinesan turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable." tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]} skills={cofounderSkills} quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like." socials={[{ l: "Instagram", h: "#" }, { l: "Behance", h: "#" }, { l: "Dribbble", h: "#" }]} />
 
       {/* 11. MANIFESTO / VINE SCROLL (300 images, small framed card + slow text inside) */}
       <ManifestoSection />

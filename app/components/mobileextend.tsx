@@ -1,12 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import RevealBlock from "@/app/components/Reveal";
 
 gsap.registerPlugin(ScrollTrigger);
+
+/* Same procedural growth sequence the desktop page ends on — code-split so the
+   canvas work stays out of the initial bundle. */
+const GrowthHelix = dynamic(
+  () => import("@/app/components/GrowthHelix"),
+  { ssr: true }
+);
 
 /* ─── palette + types ────────────────────────────────── */
 const ACCENTS = { lime: "#D6FF3F", purple: "#8B7CF6" } as const;
@@ -257,7 +265,12 @@ function PortraitCard({ accent, eyebrow, name, role, quote, bio, tags, skills, s
   );
 
   return (
-    <section ref={sectionRef} className="relative z-10 border-t border-white/[0.06] px-6 py-28 md:px-10">
+    /* The portrait card's aura glows are `-inset-6` + a 64px blur, so their painted
+       area spills ~28px past the viewport on a phone and the whole page ends up
+       horizontally scrollable. `overflow-x: clip` contains that spill without
+       creating a scroll container, so `position: sticky` keeps working (unlike
+       `overflow-x: hidden`, which would break it). */
+    <section ref={sectionRef} style={{ overflowX: "clip" }} className="relative z-10 border-t border-white/[0.06] px-6 py-28 md:px-10">
       <div className="relative mx-auto max-w-7xl">
         <Reveal><p className="mb-4 text-[12px] uppercase tracking-[0.25em]" style={{ fontFamily: "var(--font-mono)", color }}>{eyebrow}</p></Reveal>
         <Reveal delay={80}><h2 className="mb-14 max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>{side === "left" ? "The vision behind the lab." : "The face behind the pixels."}</h2></Reveal>
@@ -322,7 +335,7 @@ function MobileHero() {
       : "border-white/10 hover:border-white/20";
 
   return (
-    <section className="relative z-10 w-full bg-[#0B0D12] px-5 pt-32 pb-16 sm:px-8 sm:pt-36 sm:pb-20 lg:px-14 lg:pt-40 lg:pb-24">
+    <section className="relative z-10 w-full bg-[#0B0D12] px-6 pt-32 pb-16 md:px-10 md:pt-36 md:pb-20">
       <div className="relative mx-auto max-w-7xl">
         {/* Hero text */}
         <div className="mb-12">
@@ -425,62 +438,6 @@ function MobileHero() {
               </p>
             </div>
           </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ─── Mobile Manifesto Section ───────────────────────── */
-function MobileManifesto() {
-  return (
-    <section className="relative z-10 w-full border-t border-white/[0.06] bg-[#0B0D12] px-5 py-16 sm:px-8 sm:py-20">
-      <div className="relative mx-auto max-w-4xl">
-        <Reveal>
-          <p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>
-            Veyra — seq. 02 / growth
-          </p>
-        </Reveal>
-        <Reveal delay={80}>
-          <div className="mb-6 ml-auto h-px w-16 bg-gradient-to-l from-[#D6FF3F]/80 to-transparent" />
-        </Reveal>
-        <Reveal delay={120}>
-          <h2 className="mb-6 text-3xl leading-[1.08] sm:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>
-            We don&apos;t force it.
-            <br />
-            <span className="bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] bg-clip-text text-transparent">
-              We grow it.
-            </span>
-          </h2>
-        </Reveal>
-        <Reveal delay={160}>
-          <p className="mb-8 max-w-2xl text-base leading-relaxed text-white/75 sm:text-lg">
-            Real brands behave like living things — they need the right soil,
-            light, and time. We tend the conditions until momentum takes root.
-          </p>
-        </Reveal>
-        <Reveal delay={200}>
-          <blockquote className="mb-6 border-l-2 border-white/20 pl-4 text-base italic leading-relaxed text-white/90 sm:text-lg">
-            &ldquo;Every leaf on that vine is a decision we tested before we let
-            it grow.&rdquo;
-          </blockquote>
-        </Reveal>
-        <Reveal delay={240}>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-white/50 sm:text-[11px]" style={{ fontFamily: "var(--font-mono)" }}>
-              Creative × Digital Lab
-            </span>
-            <span className="h-1.5 w-1.5 rounded-full bg-[#D6FF3F] animate-pulse" />
-          </div>
-        </Reveal>
-        <Reveal delay={280}>
-          <a
-            href="#work"
-            className="mt-6 inline-block rounded-full border border-white/20 px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm transition hover:border-[#D6FF3F]/70 hover:text-white"
-            style={{ fontFamily: "var(--font-mono)" }}
-          >
-            See the work →
-          </a>
         </Reveal>
       </div>
     </section>
@@ -615,10 +572,7 @@ export default function MobileExtend() {
         </div>
       </section>
 
-      {/* 6. MOBILE MANIFESTO */}
-      <MobileManifesto />
-
-      {/* 7. CONTACT / CTA */}
+      {/* 6. CONTACT / CTA */}
       <section id="contact" className="relative z-10 border-t border-white/[0.06] px-6 py-24 md:px-10 overflow-hidden">
         <div className="relative mx-auto max-w-7xl">
           <Reveal><p className="mb-6 text-[12px] uppercase tracking-[0.25em] text-[#8B7CF6]" style={{ fontFamily: "var(--font-mono)" }}>Let&apos;s talk</p></Reveal>
@@ -632,10 +586,10 @@ export default function MobileExtend() {
         </div>
       </section>
 
-      {/* 8. SPLINE SHOWPIECE */}
+      {/* 7. SPLINE SHOWPIECE */}
       <SplineShowpiece />
 
-      {/* 9. MEET THE FOUNDERS — intro */}
+      {/* 8. MEET THE FOUNDERS — intro */}
       <section className="relative z-10 overflow-hidden border-t border-white/[0.06] px-6 py-20 md:px-10">
         <div className="relative mx-auto max-w-7xl">
           <Reveal><p className="mb-5 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>Meet the lab</p></Reveal>
@@ -644,11 +598,14 @@ export default function MobileExtend() {
         </div>
       </section>
 
-      {/* 10. FOUNDER */}
+      {/* 9. FOUNDER */}
       <PortraitCard accent="lime" side="left" eyebrow="The founder" indexLabel="Founder — Veyra Lab" name="Rutvi Karad" role="Founder & Creative Director" imgSrc="/founder.jpg" imgAlt="Veyra founder portrait" objectPosition="center 28%" glyphs={founderGlyphs} bio="Started Veyra with a stubborn belief: that brands deserve more than templates and guesswork. Rutvi leads the studio's creative vision — translating messy ambitions into identities, products, and campaigns that actually move numbers. Part strategist, part art director, fully obsessed with the details most people scroll past." tags={["Vision", "Brand Strategy", "Creative Direction", "Storytelling"]} skills={founderSkills} quote="We're not here to make pretty things. We're here to make pretty things that pay the rent." socials={[{ l: "LinkedIn", h: "https://www.linkedin.com/company/veyracreativesanddigitallab/" }]} />
 
-      {/* 11. CO-FOUNDER */}
-      <PortraitCard accent="purple" side="right" eyebrow="The co-founder" indexLabel="Co-Founder — Design Lead" name="Dibesh" role="Co-Founder & Design Lead" imgSrc="/cofounder.jpg" imgAlt="Veyra co-founder portrait" objectPosition="center 30%" glyphs={cofounderGlyphs} bio="The hand behind every interface that leaves the studio. Dibesh turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable." tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]} skills={cofounderSkills} quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like." socials={[{ l: "Instagram", h: "#" }, { l: "Behance", h: "#" }, { l: "Dribbble", h: "#" }]} />
+      {/* 10. CO-FOUNDER */}
+      <PortraitCard accent="purple" side="right" eyebrow="The co-founder" indexLabel="Co-Founder — Design Lead" name="Dibesh Dinesan" role="Co-Founder & Design Lead" imgSrc="/cofounder.jpg" imgAlt="Veyra co-founder portrait" objectPosition="center 30%" glyphs={cofounderGlyphs} bio="The hand behind every interface that leaves the studio. Dibesh Dinesan turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable." tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]} skills={cofounderSkills} quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like." socials={[{ l: "Instagram", h: "#" }, { l: "Behance", h: "#" }, { l: "Dribbble", h: "#" }]} />
+
+      {/* 11. GROWTH HELIX — the closing scroll sequence, same as desktop */}
+      <GrowthHelix />
 
       <style jsx global>{`
         .veyra-shimmer {
