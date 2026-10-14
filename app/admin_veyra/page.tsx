@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { isAuthenticated } from "@/lib/admin-auth";
 import { getContent, isSupabaseConfigured } from "@/lib/supabase-admin";
+import { isCloudinaryConfigured } from "@/lib/cloudinary";
 import LoginForm from "./LoginForm";
 import Dashboard from "./Dashboard";
 
@@ -22,6 +23,7 @@ export default async function AdminPage() {
       initial={content}
       source={source}
       configured={isSupabaseConfigured}
+      uploadsConfigured={isCloudinaryConfigured}
       backendError={error ?? null}
     />
   );

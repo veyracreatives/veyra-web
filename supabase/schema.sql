@@ -1,9 +1,12 @@
 -- ═══════════════════════════════════════════════════════════════════════════
---  VEYRA — admin panel storage
+--  VEYRA — admin panel content storage
 --
 --  Run this once in the Supabase SQL editor (Dashboard → SQL Editor → New).
---  It creates one content table plus the public bucket that admin-uploaded
---  logos and work images are written to.
+--  It creates the single content table that holds all editable site content.
+--
+--  Uploaded images are NOT stored here — logos and work-card images live on
+--  Cloudinary (see lib/cloudinary.ts and the CLOUDINARY_* vars in .env.local).
+--  Supabase only stores the content document, including the Cloudinary URLs.
 --
 --  Nothing here uses Row Level Security because every read and write goes
 --  through this app's server using the service-role key. If you ever expose
@@ -33,16 +36,3 @@ values (
   }'::jsonb
 )
 on conflict (id) do nothing;
-
--- ── uploads bucket ───────────────────────────────────────────────────────
--- Public read so the site can <img> the files; writes only via the service key.
-insert into storage.buckets (id, name, public)
-values ('uploads', 'uploads', true)
-on conflict (id) do update set public = true;
-
--- Service-role writes bypass RLS, so these policies only need to describe
--- public read access.
-drop policy if exists "uploads are publicly readable" on storage.objects;
-create policy "uploads are publicly readable"
-  on storage.objects for select
-  using (bucket_id = 'uploads');

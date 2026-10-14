@@ -27,11 +27,13 @@ export default function Dashboard({
   initial,
   source,
   configured,
+  uploadsConfigured,
   backendError,
 }: {
   initial: SiteContent;
   source: "supabase" | "defaults";
   configured: boolean;
+  uploadsConfigured: boolean;
   backendError: string | null;
 }) {
   const [draft, setDraft] = useState<SiteContent>(initial);
@@ -134,7 +136,7 @@ export default function Dashboard({
   };
 
   const removeLogo = async (logo: LogoItem) => {
-    // Only uploaded files live in the bucket; bundled defaults are left alone.
+    // Only uploaded files live on Cloudinary; bundled defaults are left alone.
     fetch("/api/admin/upload", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -327,7 +329,19 @@ export default function Dashboard({
         {/* ── LOGOS TAB ── */}
         {tab === "logos" && (
           <section>
-            <LogoUploader onFiles={addLogos} disabled={!configured} />
+            {!uploadsConfigured && (
+              <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+                <strong className="block font-semibold">Image uploads not connected</strong>
+                Add{" "}
+                <code className="rounded bg-black/30 px-1">CLOUDINARY_CLOUD_NAME</code>,{" "}
+                <code className="rounded bg-black/30 px-1">CLOUDINARY_API_KEY</code> and{" "}
+                <code className="rounded bg-black/30 px-1">CLOUDINARY_API_SECRET</code> to{" "}
+                <code className="rounded bg-black/30 px-1">.env.local</code>, then restart the
+                dev server. Logos and work images are stored on Cloudinary.
+              </div>
+            )}
+
+            <LogoUploader onFiles={addLogos} disabled={!uploadsConfigured} />
 
             {draft.logos.length === 0 ? (
               <div className="mt-6 rounded-2xl border border-dashed border-white/[0.12] px-6 py-14 text-center">
@@ -439,7 +453,7 @@ export default function Dashboard({
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={item.img} alt="" className="h-full w-full object-cover" />
                         </div>
-                        <ImagePicker onPick={(f) => uploadWorkImage(item.id, f)} />
+                        <ImagePicker onPick={(f) => uploadWorkImage(item.id, f)} disabled={!uploadsConfigured} />
                       </div>
                     </div>
                   </div>
@@ -509,21 +523,22 @@ function LogoUploader({ onFiles, disabled }: { onFiles: (f: FileList | null) => 
         onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }}
       />
       <p className="text-sm text-white/70">
-        {disabled ? "Connect Supabase to upload" : "Drop logos here, or click to choose"}
+        {disabled ? "Connect Cloudinary to upload" : "Drop logos here, or click to choose"}
       </p>
       <p className="mt-1.5 text-xs text-white/30">JPG, PNG, WebP, GIF, AVIF or SVG · up to 4 MB each · select several at once</p>
     </div>
   );
 }
 
-function ImagePicker({ onPick }: { onPick: (f: File | null) => void }) {
+function ImagePicker({ onPick, disabled = false }: { onPick: (f: File | null) => void; disabled?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <>
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="rounded-lg border border-white/15 px-3 py-2 text-xs text-white/70 transition hover:border-white/30 hover:text-white"
+        disabled={disabled}
+        className="rounded-lg border border-white/15 px-3 py-2 text-xs text-white/70 transition hover:border-white/30 hover:text-white disabled:opacity-40 disabled:hover:border-white/15 disabled:hover:text-white/70"
       >
         Replace
       </button>

@@ -18,17 +18,17 @@ Both are overridable with `ADMIN_USER` / `ADMIN_PASSWORD` — see
 
 ## One-time setup
 
-Content is stored in **Supabase**. Without it the panel still loads and the site
-still works, but it shows a "Backend not connected" banner and saving is
-disabled.
+Content is stored in **Supabase**; uploaded images are hosted on **Cloudinary**.
+Without Supabase the panel still loads and the site still works, but it shows a
+"Backend not connected" banner and saving is disabled. Without Cloudinary the
+logo and work-image uploaders are disabled.
 
-**1. Create the table and the upload bucket**
+**1. Create the content table**
 
 Supabase Dashboard → **SQL Editor** → **New query**, paste the whole of
-[`supabase/schema.sql`](supabase/schema.sql), and run it. It creates:
-
-- `site_content` — one row (`id = 'main'`) holding all editable content as JSON
-- the public `uploads` storage bucket that logo and card images land in
+[`supabase/schema.sql`](supabase/schema.sql), and run it. It creates
+`site_content` — one row (`id = 'main'`) holding all editable content as JSON,
+including the URLs of uploaded images.
 
 **2. Add the keys**
 
@@ -57,6 +57,23 @@ SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 > every read and write goes through this app's API routes. `.env*` is
 > gitignored, so it stays out of git.
 
+**Cloudinary (image uploads)**
+
+Grab the **Cloud name**, **API key** and **API secret** from Cloudinary →
+**Dashboard** → **Product Environment Credentials**, and add:
+
+```env
+CLOUDINARY_CLOUD_NAME=cq7fasjw
+CLOUDINARY_API_KEY=266557855728123
+CLOUDINARY_API_SECRET=...
+# Optional — every upload is filed under this folder (defaults to "veyra")
+CLOUDINARY_FOLDER=veyra
+```
+
+> The API secret signs every upload and delete, so it also stays server-side.
+> Never prefix it with `NEXT_PUBLIC_` — uploads go through `/api/admin/upload`,
+> which keeps the secret hidden.
+
 Restart the dev server afterwards. The banner in the panel turns into
 "Connected — showing saved content" and **Save changes** becomes active.
 
@@ -70,8 +87,8 @@ desktop and mobile home pages.
 
 **Logos** — drag-and-drop or click to upload several images at once (JPG, PNG,
 WebP, GIF, AVIF or SVG, up to 4 MB each). Reorder with the arrows; that is the
-order they scroll in. Each upload is given a freshly generated filename so
-replacing an image never serves a stale cached copy.
+order they scroll in. Each upload is sent to Cloudinary with a freshly
+generated public id so replacing an image never serves a stale cached copy.
 
 The strip scrolls continuously from right to left, loops seamlessly, pauses while
 your pointer is over it, and respects `prefers-reduced-motion`. **If there are
@@ -93,7 +110,7 @@ picks up changes within a few seconds.
 /admin_veyra            server component; shows the login form or the dashboard
   └─ /api/admin/login   checks credentials, sets an httpOnly signed cookie
   └─ /api/admin/content GET / PUT — read and write the content document
-  └─ /api/admin/upload  POST / DELETE — images in and out of Supabase Storage
+  └─ /api/admin/upload  POST / DELETE — images in and out of Cloudinary
 
 /                       the public site
   └─ /api/content       public read, cached ~15s
@@ -103,14 +120,15 @@ picks up changes within a few seconds.
 | File | Role |
 |---|---|
 | `lib/site-content.ts` | Types, defaults, validation, `whatsappLink()`. Single source of truth. |
-| `lib/supabase-admin.ts` | Server-only Supabase client. Falls back to defaults if unconfigured. |
+| `lib/supabase-admin.ts` | Server-only Supabase client for the content document. Falls back to defaults if unconfigured. |
+| `lib/cloudinary.ts` | Server-only, dependency-free Cloudinary upload/delete (signed with the API secret). |
 | `lib/admin-auth.ts` | Credential check, HMAC-signed session cookie, brute-force throttle. |
 
 Notes:
 
-- The credentials and the service-role key are **never** sent to the browser. The
-  auth gate runs in a server component, so an unauthenticated visitor does not
-  receive the dashboard's code or data.
+- The credentials, the Supabase service-role key and the Cloudinary API secret
+  are **never** sent to the browser. The auth gate runs in a server component,
+  so an unauthenticated visitor does not receive the dashboard's code or data.
 - The home page renders the built-in defaults on the server and swaps in saved
   content once the fetch resolves. If the fetch fails, the defaults stay — a
   backend outage can never take the public site down.

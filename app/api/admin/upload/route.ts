@@ -3,19 +3,20 @@ import { isAuthenticated } from "@/lib/admin-auth";
 import {
   uploadImage,
   deleteImage,
-  isSupabaseConfigured,
+  isCloudinaryConfigured,
   MAX_UPLOAD_BYTES,
-} from "@/lib/supabase-admin";
+} from "@/lib/cloudinary";
 
-/* Accepts a single image and returns its public URL. The filename is generated
-   server-side, so a hostile client can't choose where the file lands. */
+/* Accepts a single image and returns its public URL. The file is streamed to
+   Cloudinary with a server-side signature, so the API secret never leaves the
+   server and a hostile client can't choose where the file lands. */
 export async function POST(request: Request) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ ok: false, error: "Not signed in." }, { status: 401 });
   }
-  if (!isSupabaseConfigured) {
+  if (!isCloudinaryConfigured) {
     return NextResponse.json(
-      { ok: false, error: "Supabase is not configured — see .env.local." },
+      { ok: false, error: "Cloudinary is not configured — see .env.local." },
       { status: 503 }
     );
   }
