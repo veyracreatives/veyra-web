@@ -6,10 +6,6 @@ often: the enquiry form's WhatsApp number, the client-logo strip, and the
 
 Sign in at **http://localhost:3000/admin_veyra**
 
-| | |
-|---|---|
-| ID | `Dibesh` |
-| Password | `mady1007mady` |
 
 Both are overridable with `ADMIN_USER` / `ADMIN_PASSWORD` — see
 `.env.local.example`.
@@ -62,13 +58,7 @@ SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 Grab the **Cloud name**, **API key** and **API secret** from Cloudinary →
 **Dashboard** → **Product Environment Credentials**, and add:
 
-```env
-CLOUDINARY_CLOUD_NAME=cq7fasjw
-CLOUDINARY_API_KEY=266557855728123
-CLOUDINARY_API_SECRET=...
-# Optional — every upload is filed under this folder (defaults to "veyra")
-CLOUDINARY_FOLDER=veyra
-```
+
 
 > The API secret signs every upload and delete, so it also stays server-side.
 > Never prefix it with `NEXT_PUBLIC_` — uploads go through `/api/admin/upload`,
