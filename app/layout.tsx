@@ -72,7 +72,7 @@ const jsonLd = {
   name: "Veyra Creatives & Digital Lab",
   alternateName: "Veyra Lab",
   url: SITE_URL,
-  logo: `${SITE_URL}/veyra_logo.png`,
+  logo: `${SITE_URL}/veyra-logo.png`,
   image: `${SITE_URL}/og-image.jpg`,
   description: DESCRIPTION,
   telephone: "+91-89282-46726",

@@ -18,17 +18,16 @@ export default function Header() {
           className="group flex items-center select-none"
           onClick={closeMenu}
         >
-          {/* wider frame + taller → the wordmark fills the space, transparent padding cropped away */}
-          <span className="relative block h-13 aspect-[5/2] overflow-hidden sm:h-15">
-            <Image
-              src="/veyra_logo.png"
-              alt="Veyra"
-              fill
-              priority
-              sizes="140px"
-              className="object-cover object-center transition-opacity duration-300 group-hover:opacity-80"
-            />
-          </span>
+          {/* Official Pearl + Champagne wordmark from the brand book */}
+          <Image
+            src="/veyra-logo-pearl-champagne.png"
+            alt="Veyra"
+            width={310}
+            height={132}
+            priority
+            unoptimized
+            className="h-10 w-auto transition-opacity duration-300 group-hover:opacity-80 sm:h-12"
+          />
         </a>
 
         {/* Desktop Navigation */}
