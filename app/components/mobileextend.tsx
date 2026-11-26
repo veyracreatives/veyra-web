@@ -6,6 +6,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import LogoMarquee from "@/app/components/LogoMarquee";
+import WorkSection from "@/app/components/WorkSection";
 import { whatsappLink, type SiteContent } from "@/lib/site-content";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -292,12 +293,7 @@ const capabilities = [
 /* The "Selected work" cards come from lib/site-content.ts (DEFAULT_CONTENT) and
    are overridable from /admin_veyra — don't re-declare them here. */
 
-const workStats = [
-  { value: "250+", label: "Projects shipped" },
-  { value: "40+", label: "Brands scaled" },
-  { value: "4.9★", label: "Avg. rating" },
-  { value: "98%", label: "Would refer us" },
-];
+
 
 const philosophy = [
   { num: "01", text: "We don't guess — we build hypotheses, run experiments, and let data lead." },
@@ -458,7 +454,7 @@ export default function MobileExtend({ content }: { content: SiteContent }) {
         <div className="relative mx-auto w-full max-w-7xl">
           <div className="max-w-3xl">
             <Reveal><p className="mb-5 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]/90" style={{ fontFamily: "var(--font-mono)" }}>Digital Marketing × Creative Lab</p></Reveal>
-            <Reveal delay={80}><h1 className="veyra-shimmer text-7xl leading-[0.92] sm:text-8xl lg:text-[9rem]" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>VEYRA</h1></Reveal>
+            <Reveal delay={80}><h1 className="veyra-shimmer text-7xl leading-[0.92] sm:text-8xl lg:text-[9rem]" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>VEYRA<span className="sr-only"> Creatives &amp; Digital Lab, a digital marketing agency in Navi Mumbai and Thane</span></h1></Reveal>
             <Reveal delay={160}><p className="mt-7 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg">We build brands, campaigns, and products that behave like living things — shaped, tested, and set loose in the world.</p></Reveal>
             <Reveal delay={240}>
               <div className="mt-9 flex flex-wrap items-center gap-4">
@@ -522,53 +518,7 @@ export default function MobileExtend({ content }: { content: SiteContent }) {
       </section>
 
       {/* 6. SELECTED WORK */}
-      <section id="work" className="relative z-10 border-t border-white/[0.06] px-6 py-24 md:px-10">
-        <div className="relative mx-auto max-w-7xl">
-          <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <Reveal><p className="mb-4 text-[12px] uppercase tracking-[0.25em] text-[#D6FF3F]" style={{ fontFamily: "var(--font-mono)" }}>Selected work</p></Reveal>
-              <Reveal delay={80}><h2 className="max-w-xl text-4xl leading-tight sm:text-5xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>Results that outlive the campaign.</h2></Reveal>
-            </div>
-            <Reveal delay={120}><a href="#contact" className="whitespace-nowrap text-sm text-white/60 underline underline-offset-4 transition hover:text-white">View all case studies →</a></Reveal>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {content.work.map((w, i) => (
-              <Reveal key={w.id} delay={i * 90}>
-                <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/80 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-white/[0.15]">
-                  <div className="relative aspect-[4/3] w-full overflow-hidden">
-                    <img src={w.img} alt={w.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#12141b] via-[#12141b]/10 to-transparent" />
-                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${w.gradient} opacity-0 mix-blend-soft-light transition-opacity duration-300 group-hover:opacity-50`} />
-                    <span className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)" }}>{w.tag}</span>
-                    <span className="absolute right-4 top-4 text-[11px] tabular-nums text-white/45" style={{ fontFamily: "var(--font-mono)" }}>{String(i + 1).padStart(2, "0")}</span>
-                  </div>
-                  <div className="relative flex flex-1 flex-col p-6">
-                    <h3 className="text-xl transition-colors duration-300 group-hover:text-[#D6FF3F] sm:text-2xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>{w.title}</h3>
-                    <p className="mt-2 text-[13px] font-medium" style={{ fontFamily: "var(--font-mono)", color: "#D6FF3F" }}>{w.metric}</p>
-                    <p className="mt-3 text-sm leading-relaxed text-white/55">{w.desc}</p>
-                  </div>
-                  <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-[#D6FF3F] to-[#8B7CF6] transition-all duration-500 group-hover:w-full" />
-                </div>
-              </Reveal>
-            ))}
-          </div>
-          <Reveal delay={120}>
-            <div className="mt-12 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/80 backdrop-blur-sm">
-              <div className="grid grid-cols-2 sm:grid-cols-4">
-                {workStats.map((s) => (
-                  <div key={s.label} className="border-white/[0.06] px-6 py-9 text-center [&:not(:nth-child(2n))]:border-r sm:[&:not(:nth-child(2n))]:border-r-0 sm:[&:not(:first-child)]:border-l">
-                    <p className="bg-gradient-to-br from-white to-white/50 bg-clip-text text-3xl text-transparent sm:text-4xl" style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>{s.value}</p>
-                    <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-white/40" style={{ fontFamily: "var(--font-mono)" }}>{s.label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-white/[0.06] px-6 py-5 text-center">
-                <p className="text-[12px] uppercase tracking-[0.2em] text-white/45" style={{ fontFamily: "var(--font-mono)" }}>…and <span className="text-[#D6FF3F]">100+ more happy customers</span> — and counting.</p>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <WorkSection work={content.work} compact />
 
       {/* 7. CONTACT / CTA */}
       <section id="contact" className="relative z-10 border-t border-white/[0.06] px-6 py-24 md:px-10 overflow-hidden">
@@ -600,7 +550,7 @@ export default function MobileExtend({ content }: { content: SiteContent }) {
       <PortraitCard accent="lime" side="left" eyebrow="The founder" indexLabel="Founder — Veyra Lab" name="Rutvi Karad" role="Founder & Creative Director" imgSrc="/founder.jpg" imgAlt="Veyra founder portrait" objectPosition="center 28%" glyphs={founderGlyphs} bio="Started Veyra with a stubborn belief: that brands deserve more than templates and guesswork. Rutvi leads the studio's creative vision — translating messy ambitions into identities, products, and campaigns that actually move numbers. Part strategist, part art director, fully obsessed with the details most people scroll past." tags={["Vision", "Brand Strategy", "Creative Direction", "Storytelling"]} skills={founderSkills} quote="We're not here to make pretty things. We're here to make pretty things that pay the rent." socials={[{ l: "LinkedIn", h: "https://www.linkedin.com/company/veyracreativesanddigitallab/" }]} />
 
       {/* 11. CO-FOUNDER */}
-      <PortraitCard accent="purple" side="right" eyebrow="The co-founder" indexLabel="Co-Founder — Design Lead" name="Dibesh Dinesan" role="Co-Founder & Design Lead" imgSrc="/cofounder.jpg" imgAlt="Veyra co-founder portrait" objectPosition="center 30%" glyphs={cofounderGlyphs} bio="The hand behind every interface that leaves the studio. Dibesh Dinesan turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable." tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]} skills={cofounderSkills} quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like." socials={[{ l: "Instagram", h: "#" }, { l: "Behance", h: "#" }, { l: "Dribbble", h: "#" }]} />
+      <PortraitCard accent="purple" side="right" eyebrow="The co-founder" indexLabel="Co-Founder — Design Lead" name="Dibesh Dinesan" role="Co-Founder & Design Lead" imgSrc="/cofounder.jpg" imgAlt="Veyra co-founder portrait" objectPosition="center 30%" glyphs={cofounderGlyphs} bio="The hand behind every interface that leaves the studio. Dibesh Dinesan turns strategy into systems — pixels that behave, motion that means something, and design that holds together at every breakpoint. Quietly competitive, loudly detailed, and the reason our work feels inevitable." tags={["UI / UX", "Design Systems", "Motion", "Prototyping"]} skills={cofounderSkills} quote="Good design is invisible until you take it away. I make sure no one at Veyra ever finds out what that feels like." socials={[{ l: "Instagram", h: "https://www.instagram.com/veyralab.in/" }, { l: "LinkedIn", h: "https://www.linkedin.com/company/veyracreativesanddigitallab/" }]} />
 
       {/* 12. GROWTH HELIX — the closing scroll sequence, same as desktop */}
       <GrowthHelix />

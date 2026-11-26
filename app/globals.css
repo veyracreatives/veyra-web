@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* The site is dark-only. Phones in light mode used to get a white page with
+     dark text here, which made most sections unreadable. */
+  color-scheme: dark;
+  --background: #0B0D12;
+  --foreground: #F5F3EE;
 
   /* Font variables — next/font injects these automatically */
   --font-display: 'Space Grotesk', system-ui, sans-serif;
@@ -21,16 +24,18 @@
   --font-body: var(--font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
 /* ─── Smooth scroll ─── */
 html {
   scroll-behavior: smooth;
+  background: #0B0D12;
+}
+
+/* Decorative glows and marquees reach past the screen edge; never let them
+   create a sideways scroll. */
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
