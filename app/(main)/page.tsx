@@ -762,7 +762,7 @@ function CinematicHero({ content }: { content: SiteContent }) {
         ))}
 
         {/* ─── CENTERING WRAPPER ───────────────────────────────────────── */}
-        <div className="relative z-10 grid min-h-full w-full place-items-center pt-28 pb-16 lg:pt-0 lg:pb-0">
+        <div className="relative z-10 grid min-h-full w-full place-items-center pt-28 pb-16 lg:pt-[120px] lg:pb-12">
           {/* ─── SPLIT LAYOUT: words left, form right on lg ─── */}
           <div className="relative z-10 grid w-full max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
             {/* LEFT: scroll-revealing words */}
@@ -775,7 +775,7 @@ function CinematicHero({ content }: { content: SiteContent }) {
                   style={{
                     fontFamily: "var(--font-display)",
                     fontWeight: 700,
-                    fontSize: "clamp(2.8rem, 10vw, 8rem)",
+                    fontSize: "clamp(2.8rem, min(10vw, 12.5vh), 8rem)",
                     lineHeight: 0.95,
                     letterSpacing: "-0.03em",
                     opacity: 0,
@@ -885,17 +885,11 @@ function CinematicHero({ content }: { content: SiteContent }) {
         {/* ─── /CENTERING WRAPPER ─── */}
 
         {/* scroll prompt */}
-        <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2">
+        <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 [@media(max-height:760px)]:hidden">
           <div className="flex flex-col items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/35" style={{ fontFamily: "var(--font-mono)" }}>
             Scroll to reveal
             <span className="cinematic-scroll-line h-8 w-px bg-white/30" />
           </div>
-        </div>
-
-        {/* top-left badge */}
-        <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
-          <span className="text-[10px] uppercase tracking-[0.2em] text-white/60" style={{ fontFamily: "var(--font-mono)" }}>Veyra — 2025</span>
         </div>
 
         {/* edge scrims */}
