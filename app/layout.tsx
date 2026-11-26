@@ -76,6 +76,7 @@ const jsonLd = {
   image: `${SITE_URL}/og-image.jpg`,
   description: DESCRIPTION,
   telephone: "+91-89282-46726",
+  email: "marketing@veyracreatives.com",
   address: { "@type": "PostalAddress", addressLocality: "Navi Mumbai", addressRegion: "Maharashtra", addressCountry: "IN" },
   areaServed: [
     { "@type": "City", name: "Navi Mumbai" },
