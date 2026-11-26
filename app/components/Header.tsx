@@ -9,7 +9,7 @@ export default function Header() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#0B0D12]/70 backdrop-blur-md">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#0B0D12]/90">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 md:px-10 md:py-7">
         {/* Logo */}
         <a
@@ -79,7 +79,7 @@ export default function Header() {
 
       {/* Mobile Menu Dropdown */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 border-b border-white/[0.06] bg-[#0B0D12]/95 backdrop-blur-xl px-6 py-8 flex flex-col gap-6 shadow-2xl">
+        <div className="md:hidden absolute top-full left-0 right-0 border-b border-white/[0.06] bg-[#0B0D12]/[0.98] px-6 py-8 flex flex-col gap-6 shadow-2xl">
           <a
             href="/#work"
             onClick={closeMenu}

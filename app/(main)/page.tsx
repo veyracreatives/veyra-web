@@ -92,17 +92,20 @@ function Reveal({ children, className = "", delay = 0 }: { children: React.React
 
 /* ─── Scroll progress bar ─────────────────────────────── */
 function ScrollProgress() {
-  const [progress, setProgress] = useState(0);
+  const barRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(docHeight > 0 ? scrollTop / docHeight : 0);
+      if (barRef.current) barRef.current.style.transform = `scaleX(${docHeight > 0 ? window.scrollY / docHeight : 0})`;
     };
+    const handleScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    update();
+    return () => { window.removeEventListener("scroll", handleScroll); cancelAnimationFrame(raf); };
   }, []);
-  return <div className="scroll-progress" style={{ transform: `scaleX(${progress})` }} />;
+  return <div ref={barRef} className="scroll-progress" style={{ transform: "scaleX(0)" }} />;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -341,6 +344,12 @@ function AmbientTypeField() {
     let lastFrameTime = performance.now();
     const loop = (timestamp: number) => {
       if (reducedMotionRef.current) return;
+      // The field is a slow background drift: ~30fps is plenty and halves the
+      // repaint work, which leaves the GPU free for smooth scrolling.
+      if (document.hidden || timestamp - lastFrameTime < 32) {
+        rafRef.current = requestAnimationFrame(loop);
+        return;
+      }
       const dt = Math.min(timestamp - lastFrameTime, 50);
       lastFrameTime = timestamp;
       const dtF = dt / 16.667;
@@ -566,7 +575,7 @@ function AmbientTypeField() {
           <line key={k} ref={(el) => { lineElsRef.current[k] = el; }} stroke={k % 2 === 0 ? LIME : PURPLE} strokeWidth={1} strokeDasharray="3 7" style={{ strokeOpacity: 0 }} />
         ))}
       </svg>
-      <div ref={backLayerRef} className="absolute inset-0" style={{ filter: "blur(3px)", willChange: "transform" }}>
+      <div ref={backLayerRef} className="absolute inset-0" style={{ opacity: 0.6, willChange: "transform" }}>
         {FIELD_WORDS.map((cfg, i) => cfg.layer !== "back" ? null : (
           <div key={cfg.text} ref={(el) => { wordElsRef.current[i] = el; }} className="absolute left-0 top-0 select-none whitespace-nowrap" style={{ fontSize: `${cfg.fontSize}vw`, fontFamily: "var(--font-display)", fontWeight: 800, lineHeight: 1, letterSpacing: "-0.02em", color: "transparent", WebkitTextStroke: `${cfg.strokeWidth}px ${cfg.color}`, opacity: cfg.baseOpacity, transform: `translate3d(${cfg.startX * 100}vw, ${cfg.startY * 100}vh, 0)`, transition: "color 0.28s ease", willChange: "transform, opacity" }}>
             {cfg.text}
@@ -593,7 +602,7 @@ function AmbientTypeField() {
       <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 65% 55% at 50% 50%, transparent 30%, rgba(8,10,15,0.5) 78%, rgba(8,10,15,0.78) 100%)" }} />
       <div className="absolute inset-x-0 top-0 h-[12%]" style={{ background: "linear-gradient(to bottom, rgba(8,10,15,0.5), transparent)" }} />
       <div className="absolute inset-x-0 bottom-0 h-[12%]" style={{ background: "linear-gradient(to top, rgba(8,10,15,0.5), transparent)" }} />
-      <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
+      <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
         <span className="text-[10px] uppercase tracking-[0.2em] text-white/60" style={{ fontFamily: "var(--font-mono)" }}>Field_active</span>
         <span className="text-[10px] uppercase tracking-[0.2em] text-[#D6FF3F]/50" style={{ fontFamily: "var(--font-mono)" }}>· Nodes 06</span>
@@ -640,7 +649,12 @@ function CinematicHero({ content }: { content: SiteContent }) {
     const section = sectionRef.current;
     if (!section) return;
 
+    let heroRaf = 0;
     const onScroll = () => {
+      if (!heroRaf) heroRaf = requestAnimationFrame(render);
+    };
+    const render = () => {
+      heroRaf = 0;
       const rect = section.getBoundingClientRect();
       const scrollable = rect.height - window.innerHeight;
       if (scrollable <= 0) return;
@@ -655,7 +669,7 @@ function CinematicHero({ content }: { content: SiteContent }) {
         const revealT = Math.min(t * 1.2, 1);
         el.style.opacity = String(revealT);
         el.style.transform = `translateY(${(1 - revealT) * 80}px) scale(${0.85 + revealT * 0.15}) rotateX(${(1 - revealT) * 15}deg)`;
-        el.style.filter = `blur(${(1 - revealT) * 8}px)`;
+        el.style.filter = revealT >= 1 ? "none" : `blur(${(1 - revealT) * 8}px)`;
         const hue = i % 2 === 0 ? "214,255,63" : "139,124,246";
         el.style.color = revealT > 0.6 ? `rgba(${hue},${revealT})` : `rgba(245,243,238,${revealT * 0.6})`;
       });
@@ -681,8 +695,8 @@ function CinematicHero({ content }: { content: SiteContent }) {
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    render();
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(heroRaf); };
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -697,7 +711,7 @@ function CinematicHero({ content }: { content: SiteContent }) {
     }, 600);
   };
 
-  const inputBase = "w-full rounded-xl border bg-white/[0.03] px-4 py-3.5 text-sm text-[#F5F3EE] placeholder:text-white/25 outline-none backdrop-blur-sm transition-all duration-300";
+  const inputBase = "w-full rounded-xl border bg-white/[0.03] px-4 py-3.5 text-sm text-[#F5F3EE] placeholder:text-white/25 outline-none transition-all duration-300";
   const inputFocus = (field: string) =>
     focusedField === field
       ? "border-[#D6FF3F]/60 shadow-[0_0_24px_rgba(214,255,63,0.12)]"
@@ -718,8 +732,7 @@ function CinematicHero({ content }: { content: SiteContent }) {
             width: "min(70vw, 700px)",
             height: "min(70vw, 700px)",
             borderRadius: "50%",
-            background: "radial-gradient(circle at 35% 35%, rgba(214,255,63,0.18), rgba(139,124,246,0.12) 50%, transparent 75%)",
-            filter: "blur(80px)",
+            background: "radial-gradient(circle at 35% 35%, rgba(214,255,63,0.14), rgba(139,124,246,0.08) 45%, transparent 70%)",
             opacity: 0.25,
             willChange: "transform, opacity",
           }}
@@ -783,7 +796,7 @@ function CinematicHero({ content }: { content: SiteContent }) {
 
             {/* RIGHT: enquiry form (Reveals gracefully via IntersectionObserver, NOT scroll progress) */}
             <Reveal delay={800} className="relative w-full max-w-lg justify-self-center lg:justify-self-end">
-              <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/70 p-6 shadow-[0_32px_120px_-20px_rgba(139,124,246,0.2)] backdrop-blur-xl sm:p-8">
+              <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/90 p-6 shadow-[0_32px_120px_-20px_rgba(139,124,246,0.2)]  sm:p-8">
                 {/* corner accents */}
                 <span className="absolute left-0 top-0 h-12 w-[2px] bg-gradient-to-b from-[#D6FF3F]/60 to-transparent" />
                 <span className="absolute left-0 top-0 h-[2px] w-12 bg-gradient-to-r from-[#D6FF3F]/60 to-transparent" />
@@ -880,7 +893,7 @@ function CinematicHero({ content }: { content: SiteContent }) {
         </div>
 
         {/* top-left badge */}
-        <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5 backdrop-blur-sm">
+        <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
           <span className="text-[10px] uppercase tracking-[0.2em] text-white/60" style={{ fontFamily: "var(--font-mono)" }}>Veyra — 2025</span>
         </div>
@@ -911,18 +924,18 @@ function SplineShowpiece() {
           </Reveal>
         </div>
         <Reveal delay={180}>
-          <div className="group relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-[#0B0D12]/80 backdrop-blur-sm shadow-[0_50px_140px_-40px_rgba(139,124,246,0.45)]">
+          <div className="group relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-[#0B0D12]/80 shadow-[0_50px_140px_-40px_rgba(139,124,246,0.45)]">
             <div className="relative h-[58vh] min-h-[400px] w-full sm:h-[66vh] lg:h-[70vh]">
               <iframe src="https://my.spline.design/booleansinteractioncopycopy-tmPEv7BelAEG9pCQbWci6jvb-Ool/" frameBorder="0" loading="lazy" width="100%" height="100%" className="absolute inset-0 h-full w-full" title="Veyra 3D interaction" />
               <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 75% 75% at 50% 50%, transparent 52%, rgba(11,13,18,0.55) 88%, rgba(11,13,18,0.9) 100%)" }} />
               <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#0B0D12]/80 to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0B0D12]/80 to-transparent" />
               <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-inset ring-white/5 transition duration-500 group-hover:ring-[#D6FF3F]/25" />
-              <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
+              <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
                 <span className="text-[10px] uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: "var(--font-mono)" }}>3D · Live</span>
               </div>
-              <div className="pointer-events-none absolute bottom-5 right-5 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/70 backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)" }}>Drag to explore</div>
+              <div className="pointer-events-none absolute bottom-5 right-5 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/70" style={{ fontFamily: "var(--font-mono)" }}>Drag to explore</div>
             </div>
           </div>
         </Reveal>
@@ -1032,11 +1045,11 @@ function PortraitCard({ accent, eyebrow, name, role, quote, bio, tags, skills, s
               <div className="scan-line pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-transparent via-white/40 to-transparent mix-blend-soft-light" />
               <div className="pointer-events-none absolute inset-0 transition-opacity duration-300" style={{ background: "radial-gradient(circle at var(--gx) var(--gy), rgba(255,255,255,0.32), transparent 45%)", opacity: "var(--glare)" }} />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#0B0D12]/85 to-transparent" />
-              <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
+              <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: color }} />
                 <span className="text-[10px] uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: "var(--font-mono)" }}>Portrait / Live</span>
               </div>
-              <div className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)", color: `${color}cc` }}>Est. Veyra</div>
+              <div className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)", color: `${color}cc` }}>Est. Veyra</div>
             </div>
             {glyphs.map((g, i) => (
               <div key={i} className="pfloat pointer-events-none absolute z-30" data-speed={g.speed} style={g.pos}>
@@ -1210,7 +1223,7 @@ export default function Home() {
           <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-2xl bg-white/[0.06] sm:grid-cols-2">
             {capabilities.map((cap, i) => (
               <Reveal key={cap.title} delay={i * 90}>
-                <div className="group h-full bg-[#0B0D12]/80 backdrop-blur-sm p-8 transition-all duration-300 hover:bg-[#12141b]/90 md:p-10 relative overflow-hidden">
+                <div className="group h-full bg-[#0B0D12]/80 p-8 transition-all duration-300 hover:bg-[#12141b]/90 md:p-10 relative overflow-hidden">
                   <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-[#D6FF3F]/0 transition-all duration-500 blur-[60px] group-hover:bg-[#D6FF3F]/10" />
                   <div className="relative">
                     <div className="mb-8 flex items-center justify-between">
