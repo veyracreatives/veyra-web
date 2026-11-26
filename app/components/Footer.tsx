@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="border-t border-white/[0.06] px-6 py-12 md:px-10">
+    <footer className="relative z-10 bg-[#0B0D12] border-t border-white/[0.06] px-6 py-12 md:px-10">
       <div className="mx-auto max-w-7xl">
         {/* Social Media Icons */}
         <div className="mb-8 flex justify-center gap-4">
@@ -72,6 +72,25 @@ export default function Footer() {
           </a>
         </div>
 
+        {/* Our products: plain followable links on every page */}
+        <nav aria-label="Our products" className="mb-8 flex flex-wrap items-center justify-center gap-3">
+          <span className="w-full text-center text-[11px] uppercase tracking-[0.22em] text-white/40 sm:w-auto" style={{ fontFamily: "var(--font-mono)" }}>
+            Our products
+          </span>
+          <a
+            href="https://academy.veyracreatives.com/"
+            className="rounded-full border border-white/[0.12] px-4 py-2 text-sm text-white/75 transition hover:border-[#D6FF3F] hover:text-[#D6FF3F]"
+          >
+            Veyra Academy <span className="text-white/40">· sports academy app</span>
+          </a>
+          <a
+            href="https://dinein.veyracreatives.com/"
+            className="rounded-full border border-white/[0.12] px-4 py-2 text-sm text-white/75 transition hover:border-[#D6FF3F] hover:text-[#D6FF3F]"
+          >
+            Veyra Dine In <span className="text-white/40">· restaurant QR ordering</span>
+          </a>
+        </nav>
+
         {/* Contact Info */}
         <div className="mb-8 flex flex-col items-center justify-center gap-3 text-sm text-white/60">
           {/* Phone */}
@@ -98,7 +117,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-t border-white/[0.06] pt-6 text-center text-sm text-white/40">
           <p style={{ fontFamily: "var(--font-mono)" }}>
-            © {new Date().getFullYear()} Veyra Creatives &amp; Digital Lab. All rights reserved.
+            © {new Date().getFullYear()}{" "}Veyra Creatives &amp; Digital Lab. All rights reserved.
           </p>
         </div>
       </div>
