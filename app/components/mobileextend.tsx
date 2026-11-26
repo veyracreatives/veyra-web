@@ -123,18 +123,18 @@ function SplineShowpiece() {
           </Reveal>
         </div>
         <Reveal delay={180}>
-          <div className="group relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-[#0B0D12]/80 backdrop-blur-sm shadow-[0_50px_140px_-40px_rgba(139,124,246,0.45)]">
+          <div className="group relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-[#0B0D12]/80 shadow-[0_50px_140px_-40px_rgba(139,124,246,0.45)]">
             <div className="relative h-[58vh] min-h-[400px] w-full sm:h-[66vh] lg:h-[70vh]">
               <iframe src="https://my.spline.design/booleansinteractioncopycopy-tmPEv7BelAEG9pCQbWci6jvb-Ool/" frameBorder="0" loading="lazy" width="100%" height="100%" className="absolute inset-0 h-full w-full" title="Veyra 3D interaction" />
               <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 75% 75% at 50% 50%, transparent 52%, rgba(11,13,18,0.55) 88%, rgba(11,13,18,0.9) 100%)" }} />
               <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#0B0D12]/80 to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0B0D12]/80 to-transparent" />
               <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-inset ring-white/5 transition duration-500 group-hover:ring-[#D6FF3F]/25" />
-              <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
+              <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D6FF3F]" />
                 <span className="text-[10px] uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: "var(--font-mono)" }}>3D · Live</span>
               </div>
-              <div className="pointer-events-none absolute bottom-5 right-5 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/70 backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)" }}>Drag to explore</div>
+              <div className="pointer-events-none absolute bottom-5 right-5 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/70" style={{ fontFamily: "var(--font-mono)" }}>Drag to explore</div>
             </div>
           </div>
         </Reveal>
@@ -220,11 +220,11 @@ function PortraitCard({ accent, eyebrow, name, role, quote, bio, tags, skills, s
               <div className="grain pointer-events-none absolute inset-0" />
               <div className="scan-line pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-transparent via-white/40 to-transparent mix-blend-soft-light" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#0B0D12]/85 to-transparent" />
-              <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
+              <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: color }} />
                 <span className="text-[10px] uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: "var(--font-mono)" }}>Portrait / Live</span>
               </div>
-              <div className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] backdrop-blur-sm" style={{ fontFamily: "var(--font-mono)", color: `${color}cc` }}>Est. Veyra</div>
+              <div className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)", color: `${color}cc` }}>Est. Veyra</div>
             </div>
             {glyphs.map((g, i) => (
               <div key={i} className="pfloat pointer-events-none absolute z-30" data-speed={g.speed} style={g.pos}>
@@ -319,7 +319,7 @@ function MobileHero({ content }: { content: SiteContent }) {
     }, 600);
   };
 
-  const inputBase = "w-full rounded-xl border bg-white/[0.03] px-4 py-3.5 text-sm text-[#F5F3EE] placeholder:text-white/25 outline-none backdrop-blur-sm transition-all duration-300";
+  const inputBase = "w-full rounded-xl border bg-white/[0.03] px-4 py-3.5 text-sm text-[#F5F3EE] placeholder:text-white/25 outline-none transition-all duration-300";
   const inputFocus = (field: string) =>
     focusedField === field
       ? "border-[#D6FF3F]/60 shadow-[0_0_24px_rgba(214,255,63,0.12)]"
@@ -345,7 +345,7 @@ function MobileHero({ content }: { content: SiteContent }) {
         {/* Enquiry form */}
         <Reveal delay={240}>
           <div className="relative w-full max-w-2xl">
-            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/70 p-6 shadow-[0_32px_120px_-20px_rgba(139,124,246,0.2)] backdrop-blur-xl sm:p-8">
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0D12]/90 p-6 shadow-[0_32px_120px_-20px_rgba(139,124,246,0.2)]  sm:p-8">
               {/* corner accents */}
               <span className="absolute left-0 top-0 h-12 w-[2px] bg-gradient-to-b from-[#D6FF3F]/60 to-transparent" />
               <span className="absolute left-0 top-0 h-[2px] w-12 bg-gradient-to-r from-[#D6FF3F]/60 to-transparent" />
@@ -481,7 +481,7 @@ export default function MobileExtend({ content }: { content: SiteContent }) {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
             {philosophy.map((p, i) => (
               <Reveal key={p.num} delay={280 + i * 120}>
-                <div className="group relative rounded-2xl border border-white/[0.06] bg-[#0B0D12]/80 p-6 backdrop-blur-sm transition-colors duration-500 hover:bg-white/[0.02] md:p-8">
+                <div className="group relative rounded-2xl border border-white/[0.06] bg-[#0B0D12]/80 p-6 transition-colors duration-500 hover:bg-white/[0.02] md:p-8">
                   <p className="mb-4 text-5xl font-bold text-white/[0.04] transition-colors duration-500 group-hover:text-[#D6FF3F]/20" style={{ fontFamily: "var(--font-display)" }}>{p.num}</p>
                   <p className="text-base leading-relaxed text-white/55 transition-colors duration-500 group-hover:text-white/80 sm:text-lg">{p.text}</p>
                   <div className="mt-6 h-px w-12 bg-white/10 transition-all duration-500 group-hover:w-20 group-hover:bg-[#D6FF3F]/50" />
@@ -500,7 +500,7 @@ export default function MobileExtend({ content }: { content: SiteContent }) {
           <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {capabilities.map((cap, i) => (
               <Reveal key={cap.title} delay={i * 90}>
-                <div className="group h-full rounded-2xl border border-white/[0.08] bg-[#0B0D12]/80 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/[0.15] hover:bg-[#12141b]/90 md:p-8 relative overflow-hidden">
+                <div className="group h-full rounded-2xl border border-white/[0.08] bg-[#0B0D12]/80 p-6 transition-all duration-300 hover:border-white/[0.15] hover:bg-[#12141b]/90 md:p-8 relative overflow-hidden">
                   <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-[#D6FF3F]/0 transition-all duration-500 blur-[60px] group-hover:bg-[#D6FF3F]/10" />
                   <div className="relative">
                     <div className="mb-6 flex items-center justify-between">
