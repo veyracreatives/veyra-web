@@ -30,7 +30,7 @@ values (
   'main',
   '{
     "whatsappNumber": "918928246726",
-    "contactEmail": "veyracreativesdigitallab25@gmail.com",
+    "contactEmail": "marketing@veyracreatives.com",
     "logos": [],
     "work": []
   }'::jsonb

@@ -109,7 +109,7 @@ export const DEFAULT_WORK: WorkItem[] = [
 
 export const DEFAULT_CONTENT: SiteContent = {
   whatsappNumber: "918928246726",
-  contactEmail: "veyracreativesdigitallab25@gmail.com",
+  contactEmail: "marketing@veyracreatives.com",
   logos: [],
   work: DEFAULT_WORK,
 };
@@ -185,11 +185,19 @@ export function normalizeContent(input: unknown): SiteContent {
 
   return {
     whatsappNumber: digits(raw.whatsappNumber, DEFAULT_CONTENT.whatsappNumber),
-    contactEmail: str(raw.contactEmail, 200, DEFAULT_CONTENT.contactEmail),
+    contactEmail: contactEmail(raw.contactEmail),
     logos,
     // never let the section empty out — an empty grid reads as a broken page
     work: work.length ? work : DEFAULT_WORK,
   };
+}
+
+/** The site's public address is marketing@veyracreatives.com. Older saved
+    content still holds the previous Gmail address, so treat any Gmail value
+    as "use the default" until someone saves a new address in the admin. */
+function contactEmail(v: unknown): string {
+  const email = str(v, 200, DEFAULT_CONTENT.contactEmail);
+  return !email || /@gmail\.com$/i.test(email) ? DEFAULT_CONTENT.contactEmail : email;
 }
 
 /** WhatsApp deep link with the enquiry pre-filled. */
